@@ -42,41 +42,43 @@ export default function Relatorio() {
     : []
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow">
-      <Link href="/nps">
-        <button className="mb-4 bg-gray-300 px-3 py-1 rounded hover:bg-gray-400">
-          ← Voltar
+    <Card>
+      <div className="bg-white p-6 rounded-xl shadow">
+        <Link href="/nps">
+          <button className="mb-4 bg-gray-300 px-3 py-1 rounded hover:bg-gray-400">
+            ← Voltar
+          </button>
+        </Link>
+        <h1 className="text-xl font-bold mb-4">Relatório</h1>
+
+        <button
+          onClick={gerar}
+          className="bg-blue-600 text-white px-4 py-2 rounded mb-4"
+        >
+          Gerar relatório
         </button>
-      </Link>
-      <h1 className="text-xl font-bold mb-4">Relatório</h1>
 
-      <button
-        onClick={gerar}
-        className="bg-blue-600 text-white px-4 py-2 rounded mb-4"
-      >
-        Gerar relatório
-      </button>
+        {dados && (
+          <>
+            <div className="mb-6">
+              <p><b>Total:</b> {dados.total}</p>
+              <p><b>Respondidos:</b> {dados.respondidos}</p>
+              <p><b>Percentual:</b> {dados.percentual}%</p>
+            </div>
 
-      {dados && (
-        <>
-          <div className="mb-6">
-            <p><b>Total:</b> {dados.total}</p>
-            <p><b>Respondidos:</b> {dados.respondidos}</p>
-            <p><b>Percentual:</b> {dados.percentual}%</p>
-          </div>
-
-          <div style={{ width: '100%', height: 300 }}>
-            <ResponsiveContainer>
-              <BarChart data={dataGrafico}>
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="valor" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </>
-      )}
-    </div>
+            <div style={{ width: '100%', height: 300 }}>
+              <ResponsiveContainer>
+                <BarChart data={dataGrafico}>
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="valor" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </>
+        )}
+      </div>
+    </Card>
   )
 }
