@@ -1,7 +1,6 @@
 'use client'
 import { useState } from 'react'
 import { supabase } from '../../../lib/supabase'
-import Link from 'next/link'
 
 import {
   BarChart,
@@ -42,41 +41,64 @@ export default function Relatorio() {
     : []
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow">
-      <Link href="/nps">
-        <button className="mb-4 bg-gray-300 px-3 py-1 rounded hover:bg-gray-400">
-          ← Voltar
+    <div className="flex flex-col gap-6">
+
+      {/* TOPO */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">
+          Relatório NPS
+        </h1>
+
+        <button
+          onClick={gerar}
+          className="bg-[#C62828] hover:bg-red-700 text-white px-4 py-2 rounded-lg transition"
+        >
+          Gerar relatório
         </button>
-      </Link>
-      <h1 className="text-xl font-bold mb-4">Relatório</h1>
+      </div>
 
-      <button
-        onClick={gerar}
-        className="bg-blue-600 text-white px-4 py-2 rounded mb-4"
-      >
-        Gerar relatório
-      </button>
-
+      {/* MÉTRICAS */}
       {dados && (
-        <>
-          <div className="mb-6">
-            <p><b>Total:</b> {dados.total}</p>
-            <p><b>Respondidos:</b> {dados.respondidos}</p>
-            <p><b>Percentual:</b> {dados.percentual}%</p>
+        <div className="grid grid-cols-3 gap-4">
+
+          <div className="bg-white p-5 rounded-xl shadow-sm">
+            <p className="text-sm text-gray-500">Total</p>
+            <h2 className="text-2xl font-bold">{dados.total}</h2>
           </div>
 
-          <div style={{ width: '100%', height: 300 }}>
+          <div className="bg-white p-5 rounded-xl shadow-sm">
+            <p className="text-sm text-gray-500">Respondidos</p>
+            <h2 className="text-2xl font-bold">{dados.respondidos}</h2>
+          </div>
+
+          <div className="bg-white p-5 rounded-xl shadow-sm">
+            <p className="text-sm text-gray-500">Percentual</p>
+            <h2 className="text-2xl font-bold">{dados.percentual}%</h2>
+          </div>
+
+        </div>
+      )}
+
+      {/* GRÁFICO */}
+      {dados && (
+        <div className="bg-white p-6 rounded-2xl shadow-sm">
+          <h2 className="text-lg font-semibold mb-4">
+            Desempenho
+          </h2>
+
+          <div className="w-full h-[300px]">
             <ResponsiveContainer>
               <BarChart data={dataGrafico}>
                 <XAxis dataKey="name" />
                 <YAxis />
                 <Tooltip />
-                <Bar dataKey="valor" />
+                <Bar dataKey="valor" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </>
+        </div>
       )}
+
     </div>
   )
 }

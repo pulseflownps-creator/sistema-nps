@@ -1,7 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
-import Link from 'next/link'
 
 export default function Tabela() {
   const [dados, setDados] = useState([])
@@ -28,69 +27,96 @@ export default function Tabela() {
     carregar()
   }
 
-  const addDias = (data, dias) => {
-    const d = new Date(data)
-    d.setDate(d.getDate() + dias)
-    return d.toLocaleDateString()
-  }
-
   return (
-  <div className="bg-white p-6 rounded-xl shadow">
-    <h1 className="text-xl font-bold mb-4">Tabela NPS</h1>
+    <div className="flex flex-col gap-6">
 
-    <table className="w-full border">
-      <thead className="bg-gray-200">
-        <tr>
-          <th className="p-2">#</th>
-          <th className="p-2">Nome</th>
-          <th className="p-2">Período</th>
-          <th className="p-2">Data</th>
-          <th className="p-2">+1 dia</th>
-          <th className="p-2">+7 dias</th>
-          <th className="p-2">Respondido</th>
-        </tr>
-      </thead>
+      {/* TÍTULO */}
+      <h1 className="text-2xl font-semibold">
+        Tabela NPS
+      </h1>
 
-      <tbody>
-        {dados.map((a, i) => (
-          <tr key={a.id} className="text-center border-t">
-            <td className="p-2">{i + 1}</td>
-            <td>{a.nome}</td>
-            <td>{a.periodo}</td>
-            <td>{new Date(a.created_at).toLocaleDateString()}</td>
+      {/* CARD */}
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
 
-            <td>
-              <button
-                className="bg-blue-500 text-white px-2 py-1 rounded disabled:bg-gray-300"
-                disabled={a.respondido || a.enviado_dia1}
-                onClick={() => atualizar(a.id, 'enviado_dia1')}
+        <table className="w-full">
+
+          {/* CABEÇALHO */}
+          <thead className="bg-gray-100 text-gray-600 text-sm">
+            <tr>
+              <th className="text-left p-4">#</th>
+              <th className="text-left p-4">Nome</th>
+              <th className="text-left p-4">Período</th>
+              <th className="text-left p-4">Data</th>
+              <th className="text-left p-4">Ações</th>
+            </tr>
+          </thead>
+
+          {/* CORPO */}
+          <tbody>
+            {dados.map((a, i) => (
+              <tr
+                key={a.id}
+                className="border-t hover:bg-gray-50 transition"
               >
-                +1
-              </button>
-            </td>
+                <td className="p-4 text-sm text-gray-500">
+                  {i + 1}
+                </td>
 
-            <td>
-              <button
-                className="bg-purple-500 text-white px-2 py-1 rounded disabled:bg-gray-300"
-                disabled={a.respondido || a.enviado_semana}
-                onClick={() => atualizar(a.id, 'enviado_semana')}
-              >
-                +7
-              </button>
-            </td>
+                <td className="p-4 font-medium">
+                  {a.nome}
+                </td>
 
-            <td>
-              <button
-                className="bg-green-500 text-white px-2 py-1 rounded"
-                onClick={() => atualizar(a.id, 'respondido')}
-              >
-                {a.respondido ? '✔️' : 'OK'}
-              </button>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-)
+                <td className="p-4 text-gray-600">
+                  {a.periodo}
+                </td>
+
+                <td className="p-4 text-gray-600">
+                  {new Date(a.created_at).toLocaleDateString()}
+                </td>
+
+                {/* AÇÕES */}
+                <td className="p-4">
+                  <div className="flex gap-2">
+
+                    {/* +1 DIA */}
+                    <button
+                      disabled={a.respondido || a.enviado_dia1}
+                      onClick={() => atualizar(a.id, 'enviado_dia1')}
+                      className="px-3 py-1 rounded-lg text-sm bg-blue-100 text-blue-700 hover:bg-blue-200 disabled:bg-gray-200 disabled:text-gray-400 transition"
+                    >
+                      +1
+                    </button>
+
+                    {/* +7 DIAS */}
+                    <button
+                      disabled={a.respondido || a.enviado_semana}
+                      onClick={() => atualizar(a.id, 'enviado_semana')}
+                      className="px-3 py-1 rounded-lg text-sm bg-purple-100 text-purple-700 hover:bg-purple-200 disabled:bg-gray-200 disabled:text-gray-400 transition"
+                    >
+                      +7
+                    </button>
+
+                    {/* RESPONDIDO */}
+                    <button
+                      onClick={() => atualizar(a.id, 'respondido')}
+                      className={`px-3 py-1 rounded-lg text-sm transition
+                        ${a.respondido
+                          ? "bg-green-100 text-green-700"
+                          : "bg-[#C62828] text-white hover:bg-red-700"
+                        }`}
+                    >
+                      {a.respondido ? "Respondido" : "Marcar"}
+                    </button>
+
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+
+        </table>
+
+      </div>
+    </div>
+  )
 }

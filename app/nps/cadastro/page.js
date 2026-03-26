@@ -1,7 +1,6 @@
 'use client'
 import { useState } from 'react'
 import { supabase } from '../../../lib/supabase'
-import Link from 'next/link'
 
 export default function Cadastro() {
   const [nome, setNome] = useState('')
@@ -9,36 +8,55 @@ export default function Cadastro() {
 
   const salvar = async () => {
     await supabase.from('atletas').insert([{ nome, periodo }])
-    alert('Salvo!')
+    alert('Salvo com sucesso!')
+    setNome('')
+    setPeriodo('')
   }
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow">
-      <Link href="/nps">
-        <button className="mb-4 bg-gray-300 px-3 py-1 rounded hover:bg-gray-400">
-          ← Voltar
+    <div className="max-w-xl">
+
+      {/* TÍTULO */}
+      <h1 className="text-2xl font-semibold mb-6">
+        Cadastro de Atleta
+      </h1>
+
+      {/* CARD */}
+      <div className="bg-white p-6 rounded-2xl shadow-sm flex flex-col gap-5">
+
+        {/* INPUT NOME */}
+        <div>
+          <label className="text-sm text-gray-600">Nome</label>
+          <input
+            value={nome}
+            onChange={e => setNome(e.target.value)}
+            placeholder="Digite o nome do atleta"
+            className="w-full mt-1 border border-gray-300 rounded-lg px-4 py-2 
+            focus:outline-none focus:ring-2 focus:ring-[#C62828]"
+          />
+        </div>
+
+        {/* INPUT PERÍODO */}
+        <div>
+          <label className="text-sm text-gray-600">Período</label>
+          <input
+            value={periodo}
+            onChange={e => setPeriodo(e.target.value)}
+            placeholder="Ex: Manhã / Tarde / Noite"
+            className="w-full mt-1 border border-gray-300 rounded-lg px-4 py-2 
+            focus:outline-none focus:ring-2 focus:ring-[#C62828]"
+          />
+        </div>
+
+        {/* BOTÃO */}
+        <button
+          onClick={salvar}
+          className="mt-2 bg-[#C62828] hover:bg-red-700 text-white py-2 rounded-lg transition"
+        >
+          Salvar atleta
         </button>
-      </Link>
-      <h1 className="text-xl font-bold mb-4">Cadastro de Atleta</h1>
 
-      <input
-        className="border p-2 w-full mb-4 rounded"
-        placeholder="Nome"
-        onChange={e => setNome(e.target.value)}
-      />
-
-      <input
-        className="border p-2 w-full mb-4 rounded"
-        placeholder="Período"
-        onChange={e => setPeriodo(e.target.value)}
-      />
-
-      <button
-        onClick={salvar}
-        className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-      >
-        Salvar
-      </button>
+      </div>
     </div>
   )
 }
