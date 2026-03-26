@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { supabase } from '../../../lib/supabase'
-import { Card, Button, Input } from '../../../components/ui'
+import { Card, Button, Input } from '@/components/ui'
 
 export default function Cadastro() {
   const [nome, setNome] = useState('')
