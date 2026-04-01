@@ -2,11 +2,25 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
 import toast, { Toaster } from 'react-hot-toast'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
 
 export default function Tabela() {
   const [dados, setDados] = useState([])
   const [loading, setLoading] = useState(true)
   const [loadingId, setLoadingId] = useState(null)
+
+  const router = useRouter()
+
+  // 🔄 REDIRECIONA SE RECARREGAR
+  useEffect(() => {
+    const nav = performance.getEntriesByType("navigation")[0]
+    if (nav && nav.type === "reload") {
+      router.push('/')
+    }
+  }, [])
 
   const carregar = async () => {
     setLoading(true)
@@ -47,115 +61,138 @@ export default function Tabela() {
     setLoadingId(null)
   }
 
+  // 🧾 GERAR PDF
+  const gerarPDF = () => {
+    const doc = new jsPDF()
+
+    const tabela = dados.map((a, i) => ([
+      i + 1,
+      a.nome,
+      a.periodo,
+      new Date(a.created_at).toLocaleDateString(),
+      a.respondido ? 'Sim' : 'Não'
+    ]))
+
+    autoTable(doc, {
+      head: [['#', 'Nome', 'Período', 'Data', 'Respondido']],
+      body: tabela
+    })
+
+    doc.save('relatorio_nps.pdf')
+  }
+
+  // 🗑️ RESETAR TABELA
+  const encerrarCiclo = async () => {
+    if (!confirm('Deseja encerrar o ciclo e apagar os dados?')) return
+
+    gerarPDF()
+
+    const { error } = await supabase
+      .from('atletas')
+      .delete()
+      .neq('id', 0)
+
+    if (error) {
+      toast.error('Erro ao limpar tabela')
+    } else {
+      toast.success('Ciclo encerrado!')
+      setDados([])
+    }
+  }
+
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 p-4">
 
       <Toaster position="top-right" />
 
-      {/* TÍTULO */}
-      <h1 className="text-2xl font-semibold">
-        Tabela NPS
-      </h1>
+      <div className="w-full max-w-5xl">
 
-      {/* CARD */}
-      <div className="bg-white dark:bg-[#1E293B] rounded-2xl shadow-sm overflow-hidden transition">
+        {/* VOLTAR */}
+        <Link href="/nps">
+          <button className="mb-4 bg-gray-300 dark:bg-gray-700 px-3 py-1 rounded hover:bg-gray-400 dark:hover:bg-gray-600 text-black dark:text-white">
+            ← Voltar
+          </button>
+        </Link>
 
-        {/* LOADING */}
-        {loading ? (
-          <div className="p-6 text-center text-gray-500 dark:text-gray-300">
-            Carregando dados...
-          </div>
-        ) : (
+        <h1 className="text-2xl font-semibold mb-4 text-gray-800 dark:text-white">
+          Tabela NPS
+        </h1>
 
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[600px]">
+        {/* BOTÃO ENCERRAR */}
+        <button
+          onClick={encerrarCiclo}
+          className="mb-4 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg"
+        >
+          Encerrar ciclo (gerar PDF)
+        </button>
 
-              {/* CABEÇALHO */}
-              <thead className="bg-gray-100 dark:bg-[#0B1F3A] text-gray-600 dark:text-gray-300 text-sm">
-                <tr>
-                  <th className="text-left p-4">#</th>
-                  <th className="text-left p-4">Nome</th>
-                  <th className="text-left p-4">Período</th>
-                  <th className="text-left p-4">Data</th>
-                  <th className="text-left p-4">Ações</th>
-                </tr>
-              </thead>
+        <div className="bg-white dark:bg-[#1E293B] rounded-2xl shadow overflow-hidden">
 
-              {/* CORPO */}
-              <tbody>
-                {dados.map((a, i) => (
-                  <tr
-                    key={a.id}
-                    className="border-t dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[#0B1F3A]/50 transition"
-                  >
-                    <td className="p-4 text-sm text-gray-500">
-                      {i + 1}
-                    </td>
+          {loading ? (
+            <div className="p-6 text-center text-gray-500">
+              Carregando...
+            </div>
+          ) : (
 
-                    <td className="p-4 font-medium text-gray-800 dark:text-white">
-                      {a.nome}
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[600px]">
 
-                    <td className="p-4 text-gray-600 dark:text-gray-300">
-                      {a.periodo}
-                    </td>
+                <thead className="bg-gray-100 dark:bg-[#0B1F3A]">
+                  <tr>
+                    <th className="p-4 text-left">#</th>
+                    <th className="p-4 text-left">Nome</th>
+                    <th className="p-4 text-left">Período</th>
+                    <th className="p-4 text-left">Data</th>
+                    <th className="p-4 text-left">Ações</th>
+                  </tr>
+                </thead>
 
-                    <td className="p-4 text-gray-600 dark:text-gray-300">
-                      {new Date(a.created_at).toLocaleDateString()}
-                    </td>
+                <tbody>
+                  {dados.map((a, i) => (
+                    <tr key={a.id} className="border-t dark:border-gray-700">
 
-                    {/* AÇÕES */}
-                    <td className="p-4">
-                      <div className="flex gap-2">
+                      <td className="p-4">{i + 1}</td>
+                      <td className="p-4">{a.nome}</td>
+                      <td className="p-4">{a.periodo}</td>
+                      <td className="p-4">
+                        {new Date(a.created_at).toLocaleDateString()}
+                      </td>
 
-                        {/* +1 */}
-                        <button
-                          disabled={a.respondido || a.enviado_dia1 || loadingId === a.id}
-                          onClick={() => atualizar(a.id, 'enviado_dia1')}
-                          className="px-3 py-1 rounded-lg text-sm bg-blue-100 text-blue-700 hover:bg-blue-200 
-                          disabled:bg-gray-200 disabled:text-gray-400 transition flex items-center gap-1"
-                        >
-                          {loadingId === a.id ? "..." : "+1"}
-                        </button>
+                      <td className="p-4 flex gap-2">
 
-                        {/* +7 */}
-                        <button
-                          disabled={a.respondido || a.enviado_semana || loadingId === a.id}
-                          onClick={() => atualizar(a.id, 'enviado_semana')}
-                          className="px-3 py-1 rounded-lg text-sm bg-purple-100 text-purple-700 hover:bg-purple-200 
-                          disabled:bg-gray-200 disabled:text-gray-400 transition"
-                        >
-                          {loadingId === a.id ? "..." : "+7"}
-                        </button>
-
-                        {/* RESPONDIDO */}
                         <button
                           disabled={loadingId === a.id}
-                          onClick={() => atualizar(a.id, 'respondido')}
-                          className={`px-3 py-1 rounded-lg text-sm transition
-                            ${
-                              a.respondido
-                                ? "bg-green-100 text-green-700"
-                                : "bg-[#C62828] text-white hover:bg-red-700"
-                            }`}
+                          onClick={() => atualizar(a.id, 'enviado_dia1')}
+                          className="px-3 py-1 bg-blue-500 text-white rounded"
                         >
-                          {loadingId === a.id
-                            ? "..."
-                            : a.respondido
-                            ? "Respondido"
-                            : "Marcar"}
+                          +1
                         </button>
 
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
+                        <button
+                          disabled={loadingId === a.id}
+                          onClick={() => atualizar(a.id, 'enviado_semana')}
+                          className="px-3 py-1 bg-purple-500 text-white rounded"
+                        >
+                          +7
+                        </button>
 
-            </table>
-          </div>
+                        <button
+                          onClick={() => atualizar(a.id, 'respondido')}
+                          className="px-3 py-1 bg-green-600 text-white rounded"
+                        >
+                          OK
+                        </button>
 
-        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+
+              </table>
+            </div>
+
+          )}
+        </div>
       </div>
     </div>
   )
