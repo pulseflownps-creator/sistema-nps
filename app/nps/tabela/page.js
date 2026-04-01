@@ -1,17 +1,28 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
+import toast, { Toaster } from 'react-hot-toast'
 
 export default function Tabela() {
   const [dados, setDados] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [loadingId, setLoadingId] = useState(null)
 
   const carregar = async () => {
-    const { data } = await supabase
+    setLoading(true)
+
+    const { data, error } = await supabase
       .from('atletas')
       .select('*')
       .order('created_at')
 
-    setDados(data)
+    if (error) {
+      toast.error('Erro ao carregar dados')
+    } else {
+      setDados(data)
+    }
+
+    setLoading(false)
   }
 
   useEffect(() => {
@@ -19,16 +30,27 @@ export default function Tabela() {
   }, [])
 
   const atualizar = async (id, campo) => {
-    await supabase
+    setLoadingId(id)
+
+    const { error } = await supabase
       .from('atletas')
       .update({ [campo]: true })
       .eq('id', id)
 
-    carregar()
+    if (error) {
+      toast.error('Erro ao atualizar')
+    } else {
+      toast.success('Atualizado com sucesso')
+      carregar()
+    }
+
+    setLoadingId(null)
   }
 
   return (
     <div className="flex flex-col gap-6">
+
+      <Toaster position="top-right" />
 
       {/* TÍTULO */}
       <h1 className="text-2xl font-semibold">
@@ -36,86 +58,104 @@ export default function Tabela() {
       </h1>
 
       {/* CARD */}
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-[#1E293B] rounded-2xl shadow-sm overflow-hidden transition">
 
-        <table className="w-full">
+        {/* LOADING */}
+        {loading ? (
+          <div className="p-6 text-center text-gray-500 dark:text-gray-300">
+            Carregando dados...
+          </div>
+        ) : (
 
-          {/* CABEÇALHO */}
-          <thead className="bg-gray-100 text-gray-600 text-sm">
-            <tr>
-              <th className="text-left p-4">#</th>
-              <th className="text-left p-4">Nome</th>
-              <th className="text-left p-4">Período</th>
-              <th className="text-left p-4">Data</th>
-              <th className="text-left p-4">Ações</th>
-            </tr>
-          </thead>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[600px]">
 
-          {/* CORPO */}
-          <tbody>
-            {dados.map((a, i) => (
-              <tr
-                key={a.id}
-                className="border-t hover:bg-gray-50 transition"
-              >
-                <td className="p-4 text-sm text-gray-500">
-                  {i + 1}
-                </td>
+              {/* CABEÇALHO */}
+              <thead className="bg-gray-100 dark:bg-[#0B1F3A] text-gray-600 dark:text-gray-300 text-sm">
+                <tr>
+                  <th className="text-left p-4">#</th>
+                  <th className="text-left p-4">Nome</th>
+                  <th className="text-left p-4">Período</th>
+                  <th className="text-left p-4">Data</th>
+                  <th className="text-left p-4">Ações</th>
+                </tr>
+              </thead>
 
-                <td className="p-4 font-medium">
-                  {a.nome}
-                </td>
+              {/* CORPO */}
+              <tbody>
+                {dados.map((a, i) => (
+                  <tr
+                    key={a.id}
+                    className="border-t dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[#0B1F3A]/50 transition"
+                  >
+                    <td className="p-4 text-sm text-gray-500">
+                      {i + 1}
+                    </td>
 
-                <td className="p-4 text-gray-600">
-                  {a.periodo}
-                </td>
+                    <td className="p-4 font-medium text-gray-800 dark:text-white">
+                      {a.nome}
+                    </td>
 
-                <td className="p-4 text-gray-600">
-                  {new Date(a.created_at).toLocaleDateString()}
-                </td>
+                    <td className="p-4 text-gray-600 dark:text-gray-300">
+                      {a.periodo}
+                    </td>
 
-                {/* AÇÕES */}
-                <td className="p-4">
-                  <div className="flex gap-2">
+                    <td className="p-4 text-gray-600 dark:text-gray-300">
+                      {new Date(a.created_at).toLocaleDateString()}
+                    </td>
 
-                    {/* +1 DIA */}
-                    <button
-                      disabled={a.respondido || a.enviado_dia1}
-                      onClick={() => atualizar(a.id, 'enviado_dia1')}
-                      className="px-3 py-1 rounded-lg text-sm bg-blue-100 text-blue-700 hover:bg-blue-200 disabled:bg-gray-200 disabled:text-gray-400 transition"
-                    >
-                      +1
-                    </button>
+                    {/* AÇÕES */}
+                    <td className="p-4">
+                      <div className="flex gap-2">
 
-                    {/* +7 DIAS */}
-                    <button
-                      disabled={a.respondido || a.enviado_semana}
-                      onClick={() => atualizar(a.id, 'enviado_semana')}
-                      className="px-3 py-1 rounded-lg text-sm bg-purple-100 text-purple-700 hover:bg-purple-200 disabled:bg-gray-200 disabled:text-gray-400 transition"
-                    >
-                      +7
-                    </button>
+                        {/* +1 */}
+                        <button
+                          disabled={a.respondido || a.enviado_dia1 || loadingId === a.id}
+                          onClick={() => atualizar(a.id, 'enviado_dia1')}
+                          className="px-3 py-1 rounded-lg text-sm bg-blue-100 text-blue-700 hover:bg-blue-200 
+                          disabled:bg-gray-200 disabled:text-gray-400 transition flex items-center gap-1"
+                        >
+                          {loadingId === a.id ? "..." : "+1"}
+                        </button>
 
-                    {/* RESPONDIDO */}
-                    <button
-                      onClick={() => atualizar(a.id, 'respondido')}
-                      className={`px-3 py-1 rounded-lg text-sm transition
-                        ${a.respondido
-                          ? "bg-green-100 text-green-700"
-                          : "bg-[#C62828] text-white hover:bg-red-700"
-                        }`}
-                    >
-                      {a.respondido ? "Respondido" : "Marcar"}
-                    </button>
+                        {/* +7 */}
+                        <button
+                          disabled={a.respondido || a.enviado_semana || loadingId === a.id}
+                          onClick={() => atualizar(a.id, 'enviado_semana')}
+                          className="px-3 py-1 rounded-lg text-sm bg-purple-100 text-purple-700 hover:bg-purple-200 
+                          disabled:bg-gray-200 disabled:text-gray-400 transition"
+                        >
+                          {loadingId === a.id ? "..." : "+7"}
+                        </button>
 
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
+                        {/* RESPONDIDO */}
+                        <button
+                          disabled={loadingId === a.id}
+                          onClick={() => atualizar(a.id, 'respondido')}
+                          className={`px-3 py-1 rounded-lg text-sm transition
+                            ${
+                              a.respondido
+                                ? "bg-green-100 text-green-700"
+                                : "bg-[#C62828] text-white hover:bg-red-700"
+                            }`}
+                        >
+                          {loadingId === a.id
+                            ? "..."
+                            : a.respondido
+                            ? "Respondido"
+                            : "Marcar"}
+                        </button>
 
-        </table>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
 
+            </table>
+          </div>
+
+        )}
       </div>
     </div>
   )
