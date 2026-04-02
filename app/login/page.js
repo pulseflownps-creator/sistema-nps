@@ -1,4 +1,5 @@
 'use client'
+
 import { useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useRouter } from 'next/navigation'
@@ -6,45 +7,89 @@ import { useRouter } from 'next/navigation'
 export default function Login() {
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
+  const [lembrar, setLembrar] = useState(false)
+  const [loading, setLoading] = useState(false)
+
   const router = useRouter()
 
   const entrar = async () => {
+    if (!email || !senha) {
+      alert('Preencha todos os campos')
+      return
+    }
+
+    setLoading(true)
+
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password: senha
     })
 
+    setLoading(false)
+
     if (error) {
       alert('Erro no login')
-    } else {
-      router.push('/nps')
+      return
     }
+
+    // 🧠 SALVAR SESSÃO
+    const hoje = new Date()
+    const expira = hoje.toDateString()
+
+    localStorage.setItem('session', JSON.stringify({
+      logado: true,
+      expira,
+      lembrar
+    }))
+
+    router.push('/')
   }
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen">
-      <div className="bg-white p-6 rounded-xl shadow w-80">
-        <h1 className="text-xl font-bold mb-4">Login</h1>
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#0B1F3A] to-[#020617]">
 
+      {/* CARD */}
+      <div className="bg-white dark:bg-[#1E293B] p-8 rounded-2xl shadow-lg w-[350px] flex flex-col gap-4">
+
+        <h1 className="text-2xl font-bold text-center">
+          PulseFlow
+        </h1>
+
+        {/* EMAIL */}
         <input
-          className="border p-2 w-full mb-3 rounded"
+          type="email"
           placeholder="Email"
           onChange={e => setEmail(e.target.value)}
+          className="border p-2 rounded-lg"
         />
 
+        {/* SENHA */}
         <input
           type="password"
-          className="border p-2 w-full mb-3 rounded"
           placeholder="Senha"
           onChange={e => setSenha(e.target.value)}
+          className="border p-2 rounded-lg"
         />
 
+        {/* LEMBRAR */}
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={lembrar}
+            onChange={() => setLembrar(!lembrar)}
+          />
+          Lembrar de mim
+        </label>
+
+        {/* BOTÃO */}
         <button
           onClick={entrar}
-          className="bg-blue-600 text-white w-full py-2 rounded"
+          disabled={loading}
+          className="bg-[#C62828] hover:bg-red-700 text-white py-2 rounded-lg"
         >
-          Entrar
+          {loading ? 'Entrando...' : 'Entrar'}
         </button>
+
       </div>
     </div>
   )
