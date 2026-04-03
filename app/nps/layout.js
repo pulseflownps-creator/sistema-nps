@@ -5,7 +5,7 @@
 ========================= */
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import {
   User,
@@ -24,6 +24,21 @@ export default function NpsLayout({ children }) {
   const [open, setOpen] = useState(false);
 
   /* =========================
+     🧠 TITLE DINÂMICO
+  ========================= */
+  useEffect(() => {
+    if (pathname.includes('cadastro')) {
+      document.title = 'Cadastro | PulseFlow'
+    } else if (pathname.includes('tabela')) {
+      document.title = 'Tabela | PulseFlow'
+    } else if (pathname.includes('relatorio')) {
+      document.title = 'Relatório | PulseFlow'
+    } else {
+      document.title = 'NPS | PulseFlow'
+    }
+  }, [pathname])
+
+  /* =========================
      MENU
   ========================= */
   const menu = [
@@ -33,14 +48,16 @@ export default function NpsLayout({ children }) {
   ];
 
   return (
-    <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
+    <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900">
 
       {/* =========================
          MOBILE BUTTON
       ========================= */}
       <button
         onClick={() => setOpen(true)}
-        className="md:hidden fixed top-4 left-4 z-50 bg-[#C62828] text-white p-2 rounded-lg shadow"
+        className="md:hidden fixed top-4 left-4 z-50 
+        bg-[#C62828] text-white p-2 rounded-lg shadow
+        hover:scale-110 transition"
       >
         <Menu size={20} />
       </button>
@@ -60,27 +77,16 @@ export default function NpsLayout({ children }) {
         {/* CLOSE MOBILE */}
         <button
           onClick={() => setOpen(false)}
-          className="md:hidden mb-6 self-end"
+          className="md:hidden mb-6 self-end hover:scale-110 transition"
         >
           <X />
         </button>
 
-        {/* 🏢 LOGO */}
-        <div className="flex items-center gap-3 mb-10">
-          <img src="/logo.png" className="w-9 h-9" />
-          <div>
-            <h1 className="text-lg font-bold leading-tight">
-              PulseFlow
-            </h1>
-            <span className="text-xs text-gray-300">
-              Sistema NPS
-            </span>
-          </div>
-        </div>
-
-        {/* 🏠 VOLTAR */}
+        {/* 🔙 VOLTAR */}
         <Link href="/">
-          <div className="flex items-center gap-3 px-4 py-3 rounded-lg mb-6 bg-white/10 hover:bg-white/20 transition cursor-pointer">
+          <div className="flex items-center gap-3 px-4 py-3 rounded-lg mb-6 
+          bg-white/10 hover:bg-white/20 hover:scale-[1.02] 
+          transition cursor-pointer">
             <Home size={18} />
             <span>Painel</span>
           </div>
@@ -97,11 +103,10 @@ export default function NpsLayout({ children }) {
                 key={item.path}
                 href={item.path}
                 onClick={() => setOpen(false)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition
-                  ${
-                    isActive
-                      ? "bg-[#C62828] text-white shadow-md"
-                      : "hover:bg-white/10"
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200
+                  ${isActive
+                    ? "bg-[#C62828] text-white shadow-md scale-[1.02]"
+                    : "hover:bg-white/10 hover:scale-[1.02]"
                   }`}
               >
                 <Icon size={18} />
@@ -113,12 +118,19 @@ export default function NpsLayout({ children }) {
 
       </aside>
 
+      {open && (
+        <div
+          onClick={() => setOpen(false)}
+          className="fixed inset-0 bg-black/50 z-30 md:hidden"
+        />
+      )}
+
       {/* =========================
          CONTEÚDO
       ========================= */}
       <div className="flex-1 flex flex-col">
 
-        {/* HEADER */}
+        {/* HEADER INTERNO */}
         <header className="bg-white dark:bg-[#0B1F3A] px-6 py-4 shadow-sm">
           <h1 className="text-sm text-gray-500 dark:text-gray-300">
             Controle NPS
@@ -126,7 +138,7 @@ export default function NpsLayout({ children }) {
         </header>
 
         {/* MAIN */}
-        <main className="flex-1 p-6 md:p-8 overflow-y-auto">
+        <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-fadeIn">
           {children}
         </main>
 

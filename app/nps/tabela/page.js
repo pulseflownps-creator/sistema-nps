@@ -1,31 +1,37 @@
 'use client'
 
-/* =========================
-   IMPORTS
-========================= */
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
 import toast, { Toaster } from 'react-hot-toast'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 
-/* =========================
-   TABELA
-========================= */
 export default function Tabela() {
   const [dados, setDados] = useState([])
   const [loading, setLoading] = useState(true)
   const [loadingId, setLoadingId] = useState(null)
 
-  /* =========================
-     🔄 CARREGAR DADOS
-  ========================= */
+  useEffect(() => {
+    document.title = 'Tabela NPS | PulseFlow'
+  }, [])
+
   const carregar = async () => {
     setLoading(true)
+
+    const {
+      data: { user }
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      toast.error('Usuário não autenticado')
+      setLoading(false)
+      return
+    }
 
     const { data, error } = await supabase
       .from('atletas')
       .select('*')
+      .eq('user_id', user.id)
       .order('created_at')
 
     if (error) {
@@ -41,9 +47,6 @@ export default function Tabela() {
     carregar()
   }, [])
 
-  /* =========================
-     ✏️ ATUALIZAR STATUS
-  ========================= */
   const atualizar = async (id, campo) => {
     setLoadingId(id)
 
@@ -61,54 +64,69 @@ export default function Tabela() {
     setLoadingId(null)
   }
 
-  /* =========================
-     🧾 GERAR PDF
-  ========================= */
   const gerarPDF = () => {
     const doc = new jsPDF()
 
-    doc.setFontSize(16)
-    doc.text("Relatório NPS - PulseFlow", 14, 15)
+    const img = new Image()
+    img.src = '/logo.png'
 
-    doc.setFontSize(10)
-    doc.text(`Gerado em: ${new Date().toLocaleDateString()}`, 14, 22)
+    img.onload = () => {
 
-    const tabela = dados.map((a, i) => ([
-      i + 1,
-      a.nome,
-      a.periodo,
-      new Date(a.created_at).toLocaleDateString(),
-      a.respondido ? 'Sim' : 'Não'
-    ]))
+      doc.addImage(img, 'PNG', 14, 10, 20, 20)
 
-    autoTable(doc, {
-      startY: 30,
-      head: [['#', 'Nome', 'Período', 'Data', 'Respondido']],
-      body: tabela,
-    })
+      doc.setFontSize(18)
+      doc.text("Relatório NPS", 40, 18)
 
-    doc.save('relatorio_nps.pdf')
+      doc.setFontSize(11)
+      doc.text("PulseFlow - Sistema de Gestão", 40, 24)
+
+      doc.text(`Gerado em: ${new Date().toLocaleDateString()}`, 40, 30)
+
+      doc.line(14, 35, 196, 35)
+
+      const total = dados.length
+      const respondidos = dados.filter(a => a.respondido).length
+      const percentual = total ? ((respondidos / total) * 100).toFixed(1) : 0
+
+      doc.text("Resumo Executivo", 14, 45)
+      doc.text(`Total de atletas: ${total}`, 14, 55)
+      doc.text(`Respondidos: ${respondidos}`, 14, 62)
+      doc.text(`Taxa de resposta: ${percentual}%`, 14, 69)
+
+      const tabela = dados.map((a, i) => ([
+        i + 1,
+        a.nome,
+        a.periodo,
+        new Date(a.created_at).toLocaleDateString(),
+        a.respondido ? 'Sim' : 'Não'
+      ]))
+
+      autoTable(doc, {
+        startY: 80,
+        head: [['#', 'Nome', 'Período', 'Data', 'Respondido']],
+        body: tabela,
+      })
+
+      doc.save('relatorio_nps_profissional.pdf')
+    }
   }
 
-  /* =========================
-     🗑️ ENCERRAR CICLO
-  ========================= */
   const encerrarCiclo = async () => {
-    if (!confirm('Encerrar ciclo? Isso irá apagar os dados atuais.')) return
+    if (!confirm('Encerrar ciclo? Isso irá apagar seus dados.')) return
 
     gerarPDF()
 
-    const { error } = await supabase
+    const {
+      data: { user }
+    } = await supabase.auth.getUser()
+
+    await supabase
       .from('atletas')
       .delete()
-      .neq('id', 0)
+      .eq('user_id', user.id)
 
-    if (error) {
-      toast.error('Erro ao limpar tabela')
-    } else {
-      toast.success('Ciclo encerrado!')
-      setDados([])
-    }
+    toast.success('Ciclo encerrado!')
+    setDados([])
   }
 
   return (
@@ -116,113 +134,53 @@ export default function Tabela() {
 
       <Toaster position="top-right" />
 
-      {/* =========================
-         TOPO
-      ========================= */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-
-        <div>
-          <h1 className="text-2xl font-semibold">
-            Tabela NPS
-          </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Acompanhe envios e respostas
-          </p>
-        </div>
+      <div className="flex justify-between">
+        <h1 className="text-2xl font-semibold">Tabela NPS</h1>
 
         <button
           onClick={encerrarCiclo}
-          className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition"
+          className="bg-red-600 hover:bg-red-700 hover:scale-105
+          text-white px-4 py-2 rounded-lg transition"
         >
           Encerrar ciclo + PDF
         </button>
-
       </div>
 
-      {/* =========================
-         TABELA
-      ========================= */}
       <div className="bg-white dark:bg-[#1E293B] rounded-2xl shadow-sm overflow-hidden">
 
         {loading ? (
-          <div className="p-6 text-center text-gray-500">
-            Carregando dados...
-          </div>
+          <div className="p-6 text-center">Carregando...</div>
         ) : (
+          <table className="w-full">
 
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[600px]">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Nome</th>
+                <th>Período</th>
+                <th>Data</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
 
-              {/* HEADER */}
-              <thead className="bg-gray-100 dark:bg-[#0B1F3A] text-sm text-gray-600 dark:text-gray-300">
-                <tr>
-                  <th className="p-4 text-left">#</th>
-                  <th className="p-4 text-left">Nome</th>
-                  <th className="p-4 text-left">Período</th>
-                  <th className="p-4 text-left">Data</th>
-                  <th className="p-4 text-left">Ações</th>
+            <tbody>
+              {dados.map((a, i) => (
+                <tr key={a.id}>
+                  <td>{i + 1}</td>
+                  <td>{a.nome}</td>
+                  <td>{a.periodo}</td>
+                  <td>{new Date(a.created_at).toLocaleDateString()}</td>
+
+                  <td className="flex gap-2">
+                    <button onClick={() => atualizar(a.id, 'enviado_dia1')}>+1</button>
+                    <button onClick={() => atualizar(a.id, 'enviado_semana')}>+7</button>
+                    <button onClick={() => atualizar(a.id, 'respondido')}>OK</button>
+                  </td>
                 </tr>
-              </thead>
+              ))}
+            </tbody>
 
-              {/* BODY */}
-              <tbody>
-                {dados.map((a, i) => (
-                  <tr
-                    key={a.id}
-                    className="border-t dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[#0B1F3A]/50 transition"
-                  >
-
-                    <td className="p-4 text-sm text-gray-500">
-                      {i + 1}
-                    </td>
-
-                    <td className="p-4 font-medium">
-                      {a.nome}
-                    </td>
-
-                    <td className="p-4">
-                      {a.periodo}
-                    </td>
-
-                    <td className="p-4">
-                      {new Date(a.created_at).toLocaleDateString()}
-                    </td>
-
-                    {/* AÇÕES */}
-                    <td className="p-4 flex gap-2">
-
-                      <button
-                        disabled={a.enviado_dia1 || loadingId === a.id}
-                        onClick={() => atualizar(a.id, 'enviado_dia1')}
-                        className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded-lg disabled:opacity-50"
-                      >
-                        +1
-                      </button>
-
-                      <button
-                        disabled={a.enviado_semana || loadingId === a.id}
-                        onClick={() => atualizar(a.id, 'enviado_semana')}
-                        className="px-3 py-1 text-sm bg-purple-100 text-purple-700 rounded-lg disabled:opacity-50"
-                      >
-                        +7
-                      </button>
-
-                      <button
-                        disabled={a.respondido || loadingId === a.id}
-                        onClick={() => atualizar(a.id, 'respondido')}
-                        className="px-3 py-1 text-sm bg-green-100 text-green-700 rounded-lg disabled:opacity-50"
-                      >
-                        OK
-                      </button>
-
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-
-            </table>
-          </div>
-
+          </table>
         )}
       </div>
 

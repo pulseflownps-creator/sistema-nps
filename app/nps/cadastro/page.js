@@ -3,7 +3,7 @@
 /* =========================
    IMPORTS
 ========================= */
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '../../../lib/supabase'
 import toast, { Toaster } from 'react-hot-toast'
 
@@ -16,6 +16,13 @@ export default function Cadastro() {
   const [loading, setLoading] = useState(false)
 
   /* =========================
+     🧠 TITLE
+  ========================= */
+  useEffect(() => {
+    document.title = 'Cadastro | PulseFlow'
+  }, [])
+
+  /* =========================
      💾 SALVAR
   ========================= */
   const salvar = async () => {
@@ -26,9 +33,26 @@ export default function Cadastro() {
 
     setLoading(true)
 
+    // 🔐 pegar usuário logado
+    const {
+      data: { user }
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      toast.error('Usuário não autenticado')
+      setLoading(false)
+      return
+    }
+
     const { error } = await supabase
       .from('atletas')
-      .insert([{ nome, periodo }])
+      .insert([
+        {
+          nome,
+          periodo,
+          user_id: user.id
+        }
+      ])
 
     setLoading(false)
 
@@ -39,7 +63,6 @@ export default function Cadastro() {
 
     toast.success('Atleta cadastrado com sucesso!')
 
-    // limpar campos
     setNome('')
     setPeriodo('')
   }
@@ -88,7 +111,9 @@ export default function Cadastro() {
             bg-white dark:bg-[#0B1F3A] 
             text-gray-800 dark:text-white
             rounded-lg px-4 py-2
-            focus:outline-none focus:ring-2 focus:ring-[#C62828]"
+            transition
+            focus:outline-none focus:ring-2 focus:ring-[#C62828]
+            hover:border-[#C62828]"
           />
         </div>
 
@@ -104,7 +129,8 @@ export default function Cadastro() {
             className="w-full mt-1 border border-gray-300 dark:border-gray-600 
             bg-white dark:bg-[#0B1F3A] 
             text-gray-800 dark:text-white
-            rounded-lg px-4 py-2"
+            rounded-lg px-4 py-2
+            transition hover:border-[#C62828]"
           >
             <option value="">Selecione um período</option>
             <option value="7 dias">7 dias</option>
@@ -120,9 +146,10 @@ export default function Cadastro() {
         <button
           onClick={salvar}
           disabled={loading}
-          className="mt-2 bg-[#C62828] hover:bg-red-700 
+          className="mt-2 bg-[#C62828] hover:bg-red-700 hover:scale-105
           disabled:bg-gray-400
-          text-white py-2 rounded-lg transition flex items-center justify-center gap-2"
+          text-white py-2 rounded-lg transition-all duration-200
+          flex items-center justify-center gap-2"
         >
           {loading ? (
             <>

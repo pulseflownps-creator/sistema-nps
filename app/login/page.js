@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useRouter } from 'next/navigation'
+import toast, { Toaster } from 'react-hot-toast'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -12,15 +13,19 @@ export default function Login() {
 
   const router = useRouter()
 
+  useEffect(() => {
+    document.title = 'Login | PulseFlow'
+  }, [])
+
   const entrar = async () => {
     if (!email || !senha) {
-      alert('Preencha todos os campos')
+      toast.error('Preencha todos os campos')
       return
     }
 
     setLoading(true)
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password: senha
     })
@@ -28,50 +33,70 @@ export default function Login() {
     setLoading(false)
 
     if (error) {
-      alert('Erro no login')
+      toast.error('Email ou senha inválidos')
       return
     }
 
-    // 🧠 SALVAR SESSÃO
     const hoje = new Date()
     const expira = hoje.toDateString()
 
     localStorage.setItem('session', JSON.stringify({
       logado: true,
       expira,
-      lembrar
+      lembrar,
+      user: data.user.id
     }))
 
     router.push('/')
   }
 
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') entrar()
+  }
+
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#0B1F3A] to-[#020617]">
+    <div className="flex items-center justify-center min-h-screen 
+    bg-gradient-to-br from-[#0B1F3A] to-[#020617] px-4">
 
-      {/* CARD */}
-      <div className="bg-white dark:bg-[#1E293B] p-8 rounded-2xl shadow-lg w-[350px] flex flex-col gap-4">
+      <Toaster position="top-right" />
 
-        <h1 className="text-2xl font-bold text-center">
-          PulseFlow
-        </h1>
+      <div className="bg-white dark:bg-[#1E293B] 
+      p-8 rounded-2xl shadow-xl w-full max-w-[380px] 
+      flex flex-col gap-5 animate-fadeIn">
 
-        {/* EMAIL */}
+        <div className="flex flex-col items-center gap-2">
+          <h1 className="text-3xl font-bold tracking-wide hover:scale-105 transition">
+            PulseFlow
+          </h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Acesse sua conta
+          </p>
+        </div>
+
         <input
           type="email"
           placeholder="Email"
           onChange={e => setEmail(e.target.value)}
-          className="border p-2 rounded-lg"
+          onKeyDown={handleKeyDown}
+          className="border border-gray-300 dark:border-gray-600 
+          bg-white dark:bg-[#0B1F3A]
+          p-2 rounded-lg
+          focus:ring-2 focus:ring-[#C62828]
+          hover:border-[#C62828]"
         />
 
-        {/* SENHA */}
         <input
           type="password"
           placeholder="Senha"
           onChange={e => setSenha(e.target.value)}
-          className="border p-2 rounded-lg"
+          onKeyDown={handleKeyDown}
+          className="border border-gray-300 dark:border-gray-600 
+          bg-white dark:bg-[#0B1F3A]
+          p-2 rounded-lg
+          focus:ring-2 focus:ring-[#C62828]
+          hover:border-[#C62828]"
         />
 
-        {/* LEMBRAR */}
         <label className="flex items-center gap-2 text-sm">
           <input
             type="checkbox"
@@ -81,11 +106,13 @@ export default function Login() {
           Lembrar de mim
         </label>
 
-        {/* BOTÃO */}
         <button
           onClick={entrar}
           disabled={loading}
-          className="bg-[#C62828] hover:bg-red-700 text-white py-2 rounded-lg"
+          className="bg-[#C62828] hover:bg-red-700 hover:scale-105 
+          active:scale-95
+          disabled:bg-gray-400
+          text-white py-2 rounded-lg transition-all"
         >
           {loading ? 'Entrando...' : 'Entrar'}
         </button>

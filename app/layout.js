@@ -35,13 +35,11 @@ export default function RootLayout({ children }) {
   useEffect(() => {
     const session = JSON.parse(localStorage.getItem('session'))
 
-    // 🚫 Não logado → login
     if (!session && !isLoginPage) {
       router.push('/login')
       return
     }
 
-    // 📅 Verificar expiração
     if (session) {
       const hoje = new Date().toDateString()
 
@@ -52,7 +50,6 @@ export default function RootLayout({ children }) {
       }
     }
 
-    // 🚫 Já logado → impedir voltar pro login
     if (session && isLoginPage) {
       router.push('/')
       return
@@ -97,7 +94,7 @@ export default function RootLayout({ children }) {
   }
 
   /* =========================
-     ⏳ LOADING (evita bug visual)
+     ⏳ LOADING
   ========================= */
   if (loading) return null
 
@@ -109,30 +106,49 @@ export default function RootLayout({ children }) {
       <body className={`${inter.variable} font-sans bg-[#F3F4F6] dark:bg-gray-900 text-gray-800 dark:text-white transition`}>
 
         {/* =========================
-           🔝 HEADER GLOBAL
-        ========================= */}
+   🔝 HEADER GLOBAL SaaS
+========================= */}
         {!isLoginPage && (
-          <header className="flex items-center justify-between px-6 py-4 bg-white dark:bg-[#0B1F3A] shadow-sm">
+          <header className="relative flex items-center justify-between px-6 py-4 
+  bg-white dark:bg-[#0B1F3A] shadow-sm border-b border-gray-200 dark:border-gray-800">
 
-            {/* 🏢 LOGO + NOME */}
-            <div className="flex items-center gap-3">
+            {/* 🟢 ESQUERDA - LOGO EMPRESA */}
+            <div className="flex items-center gap-3 hover:scale-[1.03] transition">
+
               <img
-                src="/logo.png"
+                src="/logo-empresa.png"
                 alt="Logo empresa"
-                className="w-9 h-9 object-contain"
+                className="w-9 h-9 object-contain rounded-md shadow-sm"
               />
-              <span className="font-bold text-lg tracking-wide">
-                PulseFlow
+
+              <span className="hidden sm:block text-sm font-medium text-gray-600 dark:text-gray-300">
+                Sua Empresa
               </span>
             </div>
 
-            {/* ⚙️ AÇÕES */}
+            {/* 🔴 CENTRO - PULSEFLOW (FIXO E FORTE) */}
+            <div className="absolute left-1/2 transform -translate-x-1/2">
+
+              <h1 className="text-lg font-bold tracking-wide 
+      text-gray-800 dark:text-white
+      hover:scale-105 transition">
+
+                PulseFlow
+              </h1>
+
+            </div>
+
+            {/* ⚙️ DIREITA - AÇÕES */}
             <div className="flex items-center gap-3">
 
               {/* 🌙 TEMA */}
               <button
                 onClick={toggleTheme}
-                className="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:scale-105 transition"
+                className="p-2 rounded-lg 
+        bg-gray-200 dark:bg-gray-700 
+        hover:scale-110 hover:shadow-md
+        active:scale-95
+        transition-all duration-200"
                 title="Alternar tema"
               >
                 {dark ? <Sun size={18} /> : <Moon size={18} />}
@@ -141,7 +157,11 @@ export default function RootLayout({ children }) {
               {/* 🔓 LOGOUT */}
               <button
                 onClick={logout}
-                className="p-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition"
+                className="p-2 rounded-lg 
+        bg-red-500 hover:bg-red-600 
+        hover:scale-110 active:scale-95
+        text-white shadow-sm
+        transition-all duration-200"
                 title="Sair"
               >
                 <LogOut size={18} />
@@ -155,7 +175,7 @@ export default function RootLayout({ children }) {
         {/* =========================
            📄 CONTEÚDO
         ========================= */}
-        <main>
+        <main className="p-4 md:p-6 animate-fadeIn">
           {children}
         </main>
 

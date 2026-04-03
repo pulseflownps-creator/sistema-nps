@@ -3,7 +3,7 @@
 /* =========================
    IMPORTS
 ========================= */
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '../../../lib/supabase'
 import toast, { Toaster } from 'react-hot-toast'
 
@@ -25,12 +25,34 @@ export default function Relatorio() {
   const [filtro, setFiltro] = useState('mes')
 
   /* =========================
+     🧠 TITLE
+  ========================= */
+  useEffect(() => {
+    document.title = 'Relatório NPS | PulseFlow'
+  }, [])
+
+  /* =========================
      📊 GERAR RELATÓRIO
   ========================= */
   const gerar = async () => {
     setLoading(true)
 
-    const { data, error } = await supabase.from('atletas').select('*')
+    // 🔐 pegar usuário logado
+    const {
+      data: { user }
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      toast.error('Usuário não autenticado')
+      setLoading(false)
+      return
+    }
+
+    // 🔎 buscar dados SOMENTE do usuário
+    const { data, error } = await supabase
+      .from('atletas')
+      .select('*')
+      .eq('user_id', user.id)
 
     if (error) {
       toast.error('Erro ao gerar relatório')
@@ -39,7 +61,6 @@ export default function Relatorio() {
     }
 
     const hoje = new Date()
-
     let filtrados = []
 
     if (filtro === 'mes') {
@@ -92,9 +113,7 @@ export default function Relatorio() {
 
       <Toaster position="top-right" />
 
-      {/* =========================
-         TOPO
-      ========================= */}
+      {/* TOPO */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
 
         <div>
@@ -108,14 +127,14 @@ export default function Relatorio() {
 
         <div className="flex gap-2">
 
-          {/* FILTRO */}
           <select
             value={filtro}
             onChange={e => setFiltro(e.target.value)}
             className="border border-gray-300 dark:border-gray-600 
             bg-white dark:bg-[#0B1F3A] 
             text-gray-800 dark:text-white
-            px-3 py-2 rounded-lg"
+            px-3 py-2 rounded-lg
+            transition hover:border-[#C62828] focus:outline-none focus:ring-2 focus:ring-[#C62828]"
           >
             <option value="mes">Mês atual</option>
             <option value="3meses">Últimos 3 meses</option>
@@ -123,13 +142,14 @@ export default function Relatorio() {
             <option value="todos">Todos</option>
           </select>
 
-          {/* BOTÃO */}
           <button
             onClick={gerar}
             disabled={loading}
-            className="bg-[#C62828] hover:bg-red-700 
+            className="bg-[#C62828] hover:bg-red-700 hover:scale-105
             disabled:bg-gray-400
-            text-white px-4 py-2 rounded-lg flex items-center gap-2"
+            text-white px-4 py-2 rounded-lg 
+            transition-all duration-200
+            flex items-center gap-2"
           >
             {loading ? 'Gerando...' : 'Gerar relatório'}
           </button>
@@ -138,23 +158,21 @@ export default function Relatorio() {
 
       </div>
 
-      {/* =========================
-         MÉTRICAS
-      ========================= */}
+      {/* MÉTRICAS */}
       {dados && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
-          <div className="bg-white dark:bg-[#1E293B] p-5 rounded-xl shadow-sm">
+          <div className="bg-white dark:bg-[#1E293B] p-5 rounded-xl shadow-sm hover:shadow-md transition">
             <p className="text-sm text-gray-500 dark:text-gray-300">Total</p>
             <h2 className="text-3xl font-bold">{dados.total}</h2>
           </div>
 
-          <div className="bg-white dark:bg-[#1E293B] p-5 rounded-xl shadow-sm">
+          <div className="bg-white dark:bg-[#1E293B] p-5 rounded-xl shadow-sm hover:shadow-md transition">
             <p className="text-sm text-gray-500 dark:text-gray-300">Respondidos</p>
             <h2 className="text-3xl font-bold">{dados.respondidos}</h2>
           </div>
 
-          <div className="bg-white dark:bg-[#1E293B] p-5 rounded-xl shadow-sm">
+          <div className="bg-white dark:bg-[#1E293B] p-5 rounded-xl shadow-sm hover:shadow-md transition">
             <p className="text-sm text-gray-500 dark:text-gray-300">Taxa</p>
             <h2 className="text-3xl font-bold">{dados.percentual}%</h2>
           </div>
@@ -162,9 +180,7 @@ export default function Relatorio() {
         </div>
       )}
 
-      {/* =========================
-         GRÁFICO
-      ========================= */}
+      {/* GRÁFICO */}
       {dados && (
         <div className="bg-white dark:bg-[#1E293B] p-6 rounded-2xl shadow-sm">
 
