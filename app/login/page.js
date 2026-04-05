@@ -13,7 +13,6 @@ export default function Login() {
 
   const router = useRouter()
 
-  /* 🧠 TITLE (SEGURO) */
   useEffect(() => {
     if (typeof window !== 'undefined') {
       document.title = 'Login | PulseFlow'
@@ -26,7 +25,6 @@ export default function Login() {
       return
     }
 
-    /* 🚨 VERIFICA SUPABASE */
     if (!supabase?.auth) {
       toast.error('Erro de configuração do sistema')
       console.error('Supabase inválido')
@@ -67,7 +65,7 @@ export default function Login() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen 
+    <div className="h-screen overflow-hidden flex items-center justify-center 
     bg-gradient-to-br from-[#0B1F3A] to-[#020617] px-4">
 
       <Toaster position="top-right" />

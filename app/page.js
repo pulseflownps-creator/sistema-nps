@@ -1,28 +1,77 @@
 'use client'
 
-/* =========================
-   IMPORTS
-========================= */
 import Link from 'next/link'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Activity, Users } from 'lucide-react'
+import { supabase } from '../lib/supabase'
 
-/* =========================
-   HOME (DASHBOARD)
-========================= */
 export default function Home() {
+  const [total, setTotal] = useState(0)
+  const [respondidos, setRespondidos] = useState(0)
+  const [loading, setLoading] = useState(true)
 
-  /* 🧠 TITLE (SEGURO) */
   useEffect(() => {
     if (typeof window !== 'undefined') {
       document.title = 'Dashboard | PulseFlow'
     }
   }, [])
 
+  const carregar = async () => {
+    if (!supabase?.auth) return
+
+    try {
+      const {
+        data: { user }
+      } = await supabase.auth.getUser()
+
+      if (!user) return
+
+      const { data } = await supabase
+        .from('atletas')
+        .select('*')
+        .eq('user_id', user.id)
+
+      const totalCount = data?.length || 0
+      const respondidosCount = data?.filter(a => a.respondido).length || 0
+
+      setTotal(totalCount)
+      setRespondidos(respondidosCount)
+
+    } catch (err) {
+      console.error(err)
+    }
+
+    setLoading(false)
+  }
+
+  /* 🚀 LOAD INICIAL */
+  useEffect(() => {
+    carregar()
+  }, [])
+
+  /* 🔄 AUTO REFRESH */
+  useEffect(() => {
+    const interval = setInterval(carregar, 10000)
+
+    const visibility = () => {
+      if (document.visibilityState === 'visible') {
+        carregar()
+      }
+    }
+
+    document.addEventListener('visibilitychange', visibility)
+
+    return () => {
+      clearInterval(interval)
+      document.removeEventListener('visibilitychange', visibility)
+    }
+  }, [])
+
+  const taxa = total ? ((respondidos / total) * 100).toFixed(1) : 0
+
   return (
     <div className="flex flex-col gap-6 animate-fadeIn">
 
-      {/* HEADER */}
       <div>
         <h1 className="text-2xl font-semibold">
           Dashboard
@@ -35,22 +84,25 @@ export default function Home() {
       {/* MÉTRICAS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
-        <div className="bg-white dark:bg-[#1E293B] p-5 rounded-xl shadow-sm 
-        hover:shadow-md hover:scale-[1.02] transition">
+        <div className="bg-white dark:bg-[#1E293B] p-5 rounded-xl shadow-sm">
           <p className="text-sm text-gray-500">Total de atletas</p>
-          <h2 className="text-3xl font-bold">--</h2>
+          <h2 className="text-3xl font-bold">
+            {loading ? '...' : total}
+          </h2>
         </div>
 
-        <div className="bg-white dark:bg-[#1E293B] p-5 rounded-xl shadow-sm 
-        hover:shadow-md hover:scale-[1.02] transition">
+        <div className="bg-white dark:bg-[#1E293B] p-5 rounded-xl shadow-sm">
           <p className="text-sm text-gray-500">Respondidos</p>
-          <h2 className="text-3xl font-bold">--</h2>
+          <h2 className="text-3xl font-bold">
+            {loading ? '...' : respondidos}
+          </h2>
         </div>
 
-        <div className="bg-white dark:bg-[#1E293B] p-5 rounded-xl shadow-sm 
-        hover:shadow-md hover:scale-[1.02] transition">
+        <div className="bg-white dark:bg-[#1E293B] p-5 rounded-xl shadow-sm">
           <p className="text-sm text-gray-500">Taxa NPS</p>
-          <h2 className="text-3xl font-bold">--%</h2>
+          <h2 className="text-3xl font-bold">
+            {loading ? '...' : `${taxa}%`}
+          </h2>
         </div>
 
       </div>
@@ -58,7 +110,6 @@ export default function Home() {
       {/* AÇÕES */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-        {/* NPS */}
         <Link href="/nps">
           <div className="flex items-center gap-4 p-5 rounded-2xl shadow-sm 
             bg-white dark:bg-[#1E293B] 
@@ -80,7 +131,6 @@ export default function Home() {
           </div>
         </Link>
 
-        {/* EM BREVE */}
         <div className="flex items-center gap-4 p-5 rounded-2xl shadow-sm 
           bg-gray-200 dark:bg-gray-700 opacity-70 cursor-not-allowed">
 

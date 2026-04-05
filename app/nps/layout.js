@@ -23,9 +23,6 @@ export default function NpsLayout({ children }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
-  /* =========================
-     🧠 TITLE DINÂMICO
-  ========================= */
   useEffect(() => {
     if (pathname.includes('cadastro')) {
       document.title = 'Cadastro | PulseFlow'
@@ -38,9 +35,6 @@ export default function NpsLayout({ children }) {
     }
   }, [pathname])
 
-  /* =========================
-     MENU
-  ========================= */
   const menu = [
     { name: "Cadastro", path: "/nps/cadastro", icon: User },
     { name: "Tabela", path: "/nps/tabela", icon: Table },
@@ -48,11 +42,9 @@ export default function NpsLayout({ children }) {
   ];
 
   return (
-    <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900">
+    <div className="flex h-screen overflow-hidden bg-gray-100 dark:bg-gray-900">
 
-      {/* =========================
-         MOBILE BUTTON
-      ========================= */}
+      {/* MOBILE BUTTON */}
       <button
         onClick={() => setOpen(true)}
         className="md:hidden fixed top-4 left-4 z-50 
@@ -62,19 +54,16 @@ export default function NpsLayout({ children }) {
         <Menu size={20} />
       </button>
 
-      {/* =========================
-         SIDEBAR
-      ========================= */}
+      {/* SIDEBAR */}
       <aside
         className={`
-          fixed md:relative z-40 h-full w-64 p-6 flex flex-col
+          fixed md:relative z-40 h-screen w-64 p-6 flex flex-col
           bg-[#0B1F3A] text-white
           transform transition-transform duration-300
           ${open ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
         `}
       >
 
-        {/* CLOSE MOBILE */}
         <button
           onClick={() => setOpen(false)}
           className="md:hidden mb-6 self-end hover:scale-110 transition"
@@ -82,7 +71,6 @@ export default function NpsLayout({ children }) {
           <X />
         </button>
 
-        {/* 🔙 VOLTAR */}
         <Link href="/">
           <div className="flex items-center gap-3 px-4 py-3 rounded-lg mb-6 
           bg-white/10 hover:bg-white/20 hover:scale-[1.02] 
@@ -92,7 +80,6 @@ export default function NpsLayout({ children }) {
           </div>
         </Link>
 
-        {/* MENU */}
         <nav className="flex flex-col gap-2">
           {menu.map((item) => {
             const isActive = pathname === item.path;
@@ -125,19 +112,15 @@ export default function NpsLayout({ children }) {
         />
       )}
 
-      {/* =========================
-         CONTEÚDO
-      ========================= */}
-      <div className="flex-1 flex flex-col">
+      {/* CONTEÚDO */}
+      <div className="flex-1 flex flex-col h-screen overflow-hidden">
 
-        {/* HEADER INTERNO */}
-        <header className="bg-white dark:bg-[#0B1F3A] px-6 py-4 shadow-sm">
+        <header className="bg-white dark:bg-[#0B1F3A] px-6 py-4 shadow-sm shrink-0">
           <h1 className="text-sm text-gray-500 dark:text-gray-300">
             Controle NPS
           </h1>
         </header>
 
-        {/* MAIN */}
         <main className="flex-1 p-6 md:p-8 overflow-y-auto animate-fadeIn">
           {children}
         </main>

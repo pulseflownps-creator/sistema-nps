@@ -99,7 +99,7 @@ export default function ClientLayout({ children }) {
               className="w-9 h-9 object-contain rounded-md"
             />
             <span className="hidden sm:block text-sm text-gray-600 dark:text-gray-300">
-              Sua Empresa
+              Independente Academy
             </span>
           </div>
 
