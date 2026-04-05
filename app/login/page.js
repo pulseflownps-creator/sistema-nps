@@ -13,13 +13,23 @@ export default function Login() {
 
   const router = useRouter()
 
+  /* 🧠 TITLE (SEGURO) */
   useEffect(() => {
-    document.title = 'Login | PulseFlow'
+    if (typeof window !== 'undefined') {
+      document.title = 'Login | PulseFlow'
+    }
   }, [])
 
   const entrar = async () => {
     if (!email || !senha) {
       toast.error('Preencha todos os campos')
+      return
+    }
+
+    /* 🚨 VERIFICA SUPABASE */
+    if (!supabase?.auth) {
+      toast.error('Erro de configuração do sistema')
+      console.error('Supabase inválido')
       return
     }
 
@@ -40,18 +50,20 @@ export default function Login() {
     const hoje = new Date()
     const expira = hoje.toDateString()
 
-    localStorage.setItem('session', JSON.stringify({
+    const storage = lembrar ? localStorage : sessionStorage
+
+    storage.setItem('session', JSON.stringify({
       logado: true,
       expira,
       lembrar,
-      user: data.user.id
+      user: data?.user?.id || null
     }))
 
     router.push('/')
   }
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter') entrar()
+    if (e.key === 'Enter' && !loading) entrar()
   }
 
   return (

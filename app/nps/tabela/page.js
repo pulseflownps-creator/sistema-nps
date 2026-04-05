@@ -16,28 +16,40 @@ export default function Tabela() {
   }, [])
 
   const carregar = async () => {
-    setLoading(true)
-
-    const {
-      data: { user }
-    } = await supabase.auth.getUser()
-
-    if (!user) {
-      toast.error('Usuário não autenticado')
-      setLoading(false)
+    if (!supabase?.auth) {
+      toast.error('Erro de configuração do sistema')
       return
     }
 
-    const { data, error } = await supabase
-      .from('atletas')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at')
+    setLoading(true)
 
-    if (error) {
-      toast.error('Erro ao carregar dados')
-    } else {
-      setDados(data)
+    try {
+      const {
+        data: { user },
+        error: userError
+      } = await supabase.auth.getUser()
+
+      if (userError || !user) {
+        toast.error('Usuário não autenticado')
+        setLoading(false)
+        return
+      }
+
+      const { data, error } = await supabase
+        .from('atletas')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at')
+
+      if (error) {
+        toast.error('Erro ao carregar dados')
+      } else {
+        setDados(data)
+      }
+
+    } catch (err) {
+      console.error(err)
+      toast.error('Erro inesperado')
     }
 
     setLoading(false)
@@ -48,6 +60,8 @@ export default function Tabela() {
   }, [])
 
   const atualizar = async (id, campo) => {
+    if (!supabase) return
+
     setLoadingId(id)
 
     const { error } = await supabase
@@ -114,19 +128,36 @@ export default function Tabela() {
   const encerrarCiclo = async () => {
     if (!confirm('Encerrar ciclo? Isso irá apagar seus dados.')) return
 
+    if (!supabase?.auth) {
+      toast.error('Erro de configuração')
+      return
+    }
+
     gerarPDF()
 
-    const {
-      data: { user }
-    } = await supabase.auth.getUser()
+    try {
+      const {
+        data: { user },
+        error
+      } = await supabase.auth.getUser()
 
-    await supabase
-      .from('atletas')
-      .delete()
-      .eq('user_id', user.id)
+      if (error || !user) {
+        toast.error('Usuário não autenticado')
+        return
+      }
 
-    toast.success('Ciclo encerrado!')
-    setDados([])
+      await supabase
+        .from('atletas')
+        .delete()
+        .eq('user_id', user.id)
+
+      toast.success('Ciclo encerrado!')
+      setDados([])
+
+    } catch (err) {
+      console.error(err)
+      toast.error('Erro ao encerrar ciclo')
+    }
   }
 
   return (
@@ -172,9 +203,9 @@ export default function Tabela() {
                   <td>{new Date(a.created_at).toLocaleDateString()}</td>
 
                   <td className="flex gap-2">
-                    <button onClick={() => atualizar(a.id, 'enviado_dia1')}>+1</button>
-                    <button onClick={() => atualizar(a.id, 'enviado_semana')}>+7</button>
-                    <button onClick={() => atualizar(a.id, 'respondido')}>OK</button>
+                    <button disabled={loadingId === a.id} onClick={() => atualizar(a.id, 'enviado_dia1')}>+1</button>
+                    <button disabled={loadingId === a.id} onClick={() => atualizar(a.id, 'enviado_semana')}>+7</button>
+                    <button disabled={loadingId === a.id} onClick={() => atualizar(a.id, 'respondido')}>OK</button>
                   </td>
                 </tr>
               ))}

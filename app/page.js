@@ -5,26 +5,24 @@
 ========================= */
 import Link from 'next/link'
 import { useEffect } from 'react'
-import { Activity, Users, CheckCircle } from 'lucide-react'
+import { Activity, Users } from 'lucide-react'
 
 /* =========================
    HOME (DASHBOARD)
 ========================= */
 export default function Home() {
 
-  /* =========================
-     🧠 TITLE
-  ========================= */
+  /* 🧠 TITLE (SEGURO) */
   useEffect(() => {
-    document.title = 'Dashboard | PulseFlow'
+    if (typeof window !== 'undefined') {
+      document.title = 'Dashboard | PulseFlow'
+    }
   }, [])
 
   return (
     <div className="flex flex-col gap-6 animate-fadeIn">
 
-      {/* =========================
-         HEADER
-      ========================= */}
+      {/* HEADER */}
       <div>
         <h1 className="text-2xl font-semibold">
           Dashboard
@@ -34,9 +32,7 @@ export default function Home() {
         </p>
       </div>
 
-      {/* =========================
-         MÉTRICAS (PLACEHOLDER)
-      ========================= */}
+      {/* MÉTRICAS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
         <div className="bg-white dark:bg-[#1E293B] p-5 rounded-xl shadow-sm 
@@ -59,12 +55,10 @@ export default function Home() {
 
       </div>
 
-      {/* =========================
-         AÇÕES
-      ========================= */}
+      {/* AÇÕES */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-        {/* 🔵 NPS */}
+        {/* NPS */}
         <Link href="/nps">
           <div className="flex items-center gap-4 p-5 rounded-2xl shadow-sm 
             bg-white dark:bg-[#1E293B] 
@@ -86,7 +80,7 @@ export default function Home() {
           </div>
         </Link>
 
-        {/* ⚪ EM BREVE */}
+        {/* EM BREVE */}
         <div className="flex items-center gap-4 p-5 rounded-2xl shadow-sm 
           bg-gray-200 dark:bg-gray-700 opacity-70 cursor-not-allowed">
 

@@ -31,47 +31,61 @@ export default function Cadastro() {
       return
     }
 
+    // 🔥 CORREÇÃO: valida supabase
+    if (!supabase?.auth) {
+      toast.error('Erro de configuração do sistema')
+      console.error('Supabase inválido')
+      return
+    }
+
     setLoading(true)
 
-    // 🔐 pegar usuário logado
-    const {
-      data: { user }
-    } = await supabase.auth.getUser()
+    try {
+      // 🔐 pegar usuário logado
+      const {
+        data: { user },
+        error: userError
+      } = await supabase.auth.getUser()
 
-    if (!user) {
-      toast.error('Usuário não autenticado')
-      setLoading(false)
-      return
+      if (userError || !user) {
+        toast.error('Usuário não autenticado')
+        setLoading(false)
+        return
+      }
+
+      const { error } = await supabase
+        .from('atletas')
+        .insert([
+          {
+            nome,
+            periodo,
+            user_id: user.id
+          }
+        ])
+
+      if (error) {
+        toast.error('Erro ao salvar')
+        setLoading(false)
+        return
+      }
+
+      toast.success('Atleta cadastrado com sucesso!')
+
+      setNome('')
+      setPeriodo('')
+    } catch (err) {
+      console.error(err)
+      toast.error('Erro inesperado')
     }
-
-    const { error } = await supabase
-      .from('atletas')
-      .insert([
-        {
-          nome,
-          periodo,
-          user_id: user.id
-        }
-      ])
 
     setLoading(false)
-
-    if (error) {
-      toast.error('Erro ao salvar')
-      return
-    }
-
-    toast.success('Atleta cadastrado com sucesso!')
-
-    setNome('')
-    setPeriodo('')
   }
 
   /* =========================
      ⌨️ ENTER PARA SALVAR
   ========================= */
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter') salvar()
+    if (e.key === 'Enter' && !loading) salvar()
   }
 
   return (
