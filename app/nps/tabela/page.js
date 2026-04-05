@@ -78,15 +78,22 @@ export default function Tabela() {
   }
 
   /* 🗑️ APAGAR TABELA (CORRIGIDO) */
-  const confirmarExclusao = async () => {
-    const { data: { user } } = await supabase.auth.getUser()
+const confirmarExclusao = async () => {
+  try {
+    if (!dados.length) {
+      toast.error('Nada para apagar')
+      return
+    }
+
+    const ids = dados.map(d => d.id)
 
     const { error } = await supabase
       .from('atletas')
       .delete()
-      .eq('user_id', user.id)
+      .in('id', ids)
 
     if (error) {
+      console.error(error)
       toast.error('Erro ao apagar tabela')
       return
     }
@@ -94,7 +101,12 @@ export default function Tabela() {
     toast.success('Tabela apagada com sucesso')
     setOpenModal(false)
     carregar()
+
+  } catch (err) {
+    console.error(err)
+    toast.error('Erro inesperado')
   }
+}
 
   /* 📄 PDF COM LOGO + AZUL */
   const gerarPDF = () => {
