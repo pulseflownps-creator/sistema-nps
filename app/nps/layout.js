@@ -57,7 +57,7 @@ export default function NpsLayout({ children }) {
       {/* SIDEBAR */}
       <aside
         className={`
-          fixed md:relative z-40 h-screen w-64 p-6 flex flex-col
+          fixed md:relative z-40 h-full w-64 p-6 flex flex-col
           bg-[#0B1F3A] text-white
           transform transition-transform duration-300
           ${open ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
@@ -113,7 +113,7 @@ export default function NpsLayout({ children }) {
       )}
 
       {/* CONTEÚDO */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
+      <div className="flex-1 flex flex-col h-full overflow-hidden">
 
         <header className="bg-white dark:bg-[#0B1F3A] px-6 py-4 shadow-sm shrink-0">
           <h1 className="text-sm text-gray-500 dark:text-gray-300">

@@ -1,37 +1,24 @@
 'use client'
 
-/* =========================
-   IMPORTS
-========================= */
 import { useState, useEffect } from 'react'
 import { supabase } from '../../../lib/supabase'
 import toast, { Toaster } from 'react-hot-toast'
 
-/* =========================
-   CADASTRO
-========================= */
 export default function Cadastro() {
   const [nome, setNome] = useState('')
   const [periodo, setPeriodo] = useState('')
   const [loading, setLoading] = useState(false)
 
-  /* =========================
-     🧠 TITLE
-  ========================= */
   useEffect(() => {
     document.title = 'Cadastro | PulseFlow'
   }, [])
 
-  /* =========================
-     💾 SALVAR
-  ========================= */
   const salvar = async () => {
     if (!nome || !periodo) {
       toast.error('Preencha todos os campos')
       return
     }
 
-    // 🔥 CORREÇÃO: valida supabase
     if (!supabase?.auth) {
       toast.error('Erro de configuração do sistema')
       console.error('Supabase inválido')
@@ -41,7 +28,6 @@ export default function Cadastro() {
     setLoading(true)
 
     try {
-      // 🔐 pegar usuário logado
       const {
         data: { user },
         error: userError
@@ -81,21 +67,15 @@ export default function Cadastro() {
     setLoading(false)
   }
 
-  /* =========================
-     ⌨️ ENTER PARA SALVAR
-  ========================= */
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !loading) salvar()
   }
 
   return (
-    <div className="flex flex-col gap-6 max-w-xl">
+    <div className="w-full flex flex-col gap-6 max-w-xl">
 
       <Toaster position="top-right" />
 
-      {/* =========================
-         TÍTULO
-      ========================= */}
       <div>
         <h1 className="text-2xl font-semibold">
           Cadastro de Atleta
@@ -105,12 +85,8 @@ export default function Cadastro() {
         </p>
       </div>
 
-      {/* =========================
-         CARD
-      ========================= */}
       <div className="bg-white dark:bg-[#1E293B] p-6 rounded-2xl shadow-sm flex flex-col gap-5">
 
-        {/* NOME */}
         <div>
           <label className="text-sm text-gray-600 dark:text-gray-300">
             Nome do atleta
@@ -131,7 +107,6 @@ export default function Cadastro() {
           />
         </div>
 
-        {/* PERÍODO */}
         <div>
           <label className="text-sm text-gray-600 dark:text-gray-300">
             Período de acompanhamento
@@ -156,7 +131,6 @@ export default function Cadastro() {
           </select>
         </div>
 
-        {/* BOTÃO */}
         <button
           onClick={salvar}
           disabled={loading}

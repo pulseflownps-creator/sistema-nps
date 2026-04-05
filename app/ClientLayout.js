@@ -2,14 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Sun, Moon, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 
 export default function ClientLayout({ children }) {
   const router = useRouter()
   const pathname = usePathname()
 
   const [loading, setLoading] = useState(true)
-  const [dark, setDark] = useState(false)
 
   const isLoginPage = pathname === '/login'
 
@@ -45,33 +44,6 @@ export default function ClientLayout({ children }) {
 
     setLoading(false)
   }, [pathname, router, isLoginPage])
-
-  /* 🌙 TEMA - CORRIGIDO */
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-
-    const saved = localStorage.getItem("theme")
-
-    // se tiver salvo
-    if (saved) {
-      const isDark = saved === "dark"
-      setDark(isDark)
-      document.documentElement.classList.toggle("dark", isDark)
-    } else {
-      // fallback: preferência do sistema
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
-      setDark(prefersDark)
-      document.documentElement.classList.toggle("dark", prefersDark)
-    }
-  }, [])
-
-  const toggleTheme = () => {
-    const newTheme = !dark
-
-    setDark(newTheme)
-    document.documentElement.classList.toggle("dark", newTheme)
-    localStorage.setItem("theme", newTheme ? "dark" : "light")
-  }
 
   const logout = () => {
     localStorage.removeItem('session')
@@ -109,13 +81,6 @@ export default function ClientLayout({ children }) {
           </div>
 
           <div className="flex items-center gap-3">
-            <button 
-              onClick={toggleTheme} 
-              className="p-2 bg-gray-200 dark:bg-gray-700 rounded-lg transition"
-            >
-              {dark ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
-
             <button onClick={logout} className="p-2 bg-red-500 text-white rounded-lg">
               <LogOut size={18} />
             </button>
@@ -124,7 +89,8 @@ export default function ClientLayout({ children }) {
         </header>
       )}
 
-      <main className="p-4 md:p-6">
+      {/* 🔥 CORREÇÃO DO SCROLL */}
+      <main className="p-4 md:p-6 min-h-[calc(100vh-80px)]">
         {children}
       </main>
     </>

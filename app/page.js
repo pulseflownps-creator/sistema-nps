@@ -44,12 +44,10 @@ export default function Home() {
     setLoading(false)
   }
 
-  /* 🚀 LOAD INICIAL */
   useEffect(() => {
     carregar()
   }, [])
 
-  /* 🔄 AUTO REFRESH */
   useEffect(() => {
     const interval = setInterval(carregar, 10000)
 
@@ -70,7 +68,7 @@ export default function Home() {
   const taxa = total ? ((respondidos / total) * 100).toFixed(1) : 0
 
   return (
-    <div className="flex flex-col gap-6 animate-fadeIn">
+    <div className="min-h-full flex flex-col gap-6 animate-fadeIn">
 
       <div>
         <h1 className="text-2xl font-semibold">
@@ -81,7 +79,6 @@ export default function Home() {
         </p>
       </div>
 
-      {/* MÉTRICAS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
         <div className="bg-white dark:bg-[#1E293B] p-5 rounded-xl shadow-sm">
@@ -107,7 +104,6 @@ export default function Home() {
 
       </div>
 
-      {/* AÇÕES */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
         <Link href="/nps">

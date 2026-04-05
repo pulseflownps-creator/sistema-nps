@@ -16,6 +16,8 @@ export default function Tabela() {
   const [periodoFiltro, setPeriodoFiltro] = useState('')
   const [status, setStatus] = useState('')
 
+  const [openModal, setOpenModal] = useState(false)
+
   useEffect(() => {
     document.title = 'Tabela NPS | PulseFlow'
   }, [])
@@ -75,12 +77,8 @@ export default function Tabela() {
     setLoadingId(null)
   }
 
-  /* 🗑️ APAGAR TABELA */
-  const apagarTabela = async () => {
-    const confirmar = confirm('Tem certeza que deseja apagar TODOS os dados?')
-
-    if (!confirmar) return
-
+  /* 🗑️ APAGAR TABELA (MODAL) */
+  const confirmarExclusao = async () => {
     const { data: { user } } = await supabase.auth.getUser()
 
     await supabase
@@ -89,44 +87,43 @@ export default function Tabela() {
       .eq('user_id', user.id)
 
     toast.success('Tabela apagada com sucesso')
+    setOpenModal(false)
     carregar()
   }
 
-  /* 📄 PDF PROFISSIONAL */
+  /* 📄 PDF COM DASHBOARD */
   const gerarPDF = () => {
     const doc = new jsPDF()
-    const img = new Image()
-    img.src = '/logo-empresa.png'
 
-    img.onload = () => {
-      doc.addImage(img, 'PNG', 14, 10, 20, 20)
+    const total = filtrados.length
+    const respondidos = filtrados.filter(a => a.respondido).length
+    const taxa = total ? ((respondidos / total) * 100).toFixed(1) : 0
 
-      doc.setFontSize(16)
-      doc.text("Relatório NPS", 105, 20, { align: 'center' })
+    doc.setFontSize(18)
+    doc.text("Relatório NPS", 105, 15, { align: 'center' })
 
-      const tabela = filtrados.map((a, i) => ([
-        i + 1,
-        a.nome,
-        a.periodo,
-        new Date(a.created_at).toLocaleDateString(),
-        a.respondido ? 'Sim' : 'Não'
-      ]))
+    doc.setFontSize(12)
+    doc.text(`Total de atletas: ${total}`, 14, 30)
+    doc.text(`Respondidos: ${respondidos}`, 14, 38)
+    doc.text(`Taxa de resposta: ${taxa}%`, 14, 46)
 
-      autoTable(doc, {
-        startY: 35,
-        head: [['#', 'Nome', 'Período', 'Data', 'Respondido']],
-        body: tabela,
-        styles: {
-          fontSize: 10,
-          cellPadding: 3
-        },
-        headStyles: {
-          fillColor: [30, 41, 59]
-        }
-      })
+    const tabela = filtrados.map((a, i) => ([
+      i + 1,
+      a.nome,
+      a.periodo,
+      new Date(a.created_at).toLocaleDateString(),
+      a.respondido ? 'Sim' : 'Não'
+    ]))
 
-      doc.save('relatorio_nps.pdf')
-    }
+    autoTable(doc, {
+      startY: 55,
+      head: [['#', 'Nome', 'Período', 'Data', 'Respondido']],
+      body: tabela,
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [198, 40, 40] }
+    })
+
+    doc.save('relatorio_nps.pdf')
   }
 
   const exportarCSV = () => {
@@ -146,9 +143,42 @@ export default function Tabela() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="w-full flex flex-col gap-6">
 
       <Toaster position="top-right" />
+
+      {/* MODAL */}
+      {openModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-[#1E293B] p-6 rounded-2xl shadow-xl w-full max-w-sm">
+
+            <h2 className="text-lg font-semibold mb-2">
+              Confirmar exclusão
+            </h2>
+
+            <p className="text-sm text-gray-500 mb-4">
+              Tem certeza que deseja apagar todos os dados? Essa ação não pode ser desfeita.
+            </p>
+
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setOpenModal(false)}
+                className="px-4 py-2 rounded-lg bg-gray-300"
+              >
+                Cancelar
+              </button>
+
+              <button
+                onClick={confirmarExclusao}
+                className="px-4 py-2 rounded-lg bg-red-600 text-white"
+              >
+                Apagar
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-col md:flex-row md:justify-between gap-4">
 
@@ -163,13 +193,16 @@ export default function Tabela() {
             CSV
           </button>
 
-          <button onClick={apagarTabela} className="bg-red-600 text-white px-4 py-2 rounded-lg">
+          <button 
+            onClick={() => setOpenModal(true)} 
+            className="bg-red-600 text-white px-4 py-2 rounded-lg"
+          >
             Apagar tabela
           </button>
         </div>
       </div>
 
-      {/* FILTROS MELHORADOS */}
+      {/* FILTROS */}
       <div className="flex gap-3 flex-wrap">
 
         <select 

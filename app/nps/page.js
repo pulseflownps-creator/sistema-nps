@@ -11,7 +11,7 @@ export default function NPS() {
   }, [])
 
   return (
-    <div className="min-h-[calc(100vh-80px)] flex flex-col gap-6 animate-fadeIn">
+    <div className="flex flex-col gap-6 animate-fadeIn">
 
       <div>
         <h1 className="text-2xl font-semibold">

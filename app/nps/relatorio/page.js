@@ -1,8 +1,5 @@
 'use client'
 
-/* =========================
-   IMPORTS
-========================= */
 import { useState, useEffect } from 'react'
 import { supabase } from '../../../lib/supabase'
 import toast, { Toaster } from 'react-hot-toast'
@@ -16,28 +13,18 @@ import {
   ResponsiveContainer
 } from 'recharts'
 
-/* =========================
-   RELATÓRIO
-========================= */
 export default function Relatorio() {
   const [dados, setDados] = useState(null)
   const [loading, setLoading] = useState(false)
   const [filtro, setFiltro] = useState('mes')
 
-  /* =========================
-     🧠 TITLE
-  ========================= */
   useEffect(() => {
     document.title = 'Relatório NPS | PulseFlow'
   }, [])
 
-  /* =========================
-     📊 GERAR RELATÓRIO
-  ========================= */
   const gerar = async () => {
     setLoading(true)
 
-    // 🔐 pegar usuário logado
     const {
       data: { user }
     } = await supabase.auth.getUser()
@@ -48,7 +35,6 @@ export default function Relatorio() {
       return
     }
 
-    // 🔎 buscar dados SOMENTE do usuário
     const { data, error } = await supabase
       .from('atletas')
       .select('*')
@@ -98,9 +84,6 @@ export default function Relatorio() {
     setLoading(false)
   }
 
-  /* =========================
-     📈 DADOS DO GRÁFICO
-  ========================= */
   const dataGrafico = dados
     ? [
         { name: 'Total', valor: dados.total },
@@ -109,11 +92,10 @@ export default function Relatorio() {
     : []
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="w-full flex flex-col gap-6">
 
       <Toaster position="top-right" />
 
-      {/* TOPO */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
 
         <div>
@@ -158,7 +140,6 @@ export default function Relatorio() {
 
       </div>
 
-      {/* MÉTRICAS */}
       {dados && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
@@ -180,7 +161,6 @@ export default function Relatorio() {
         </div>
       )}
 
-      {/* GRÁFICO */}
       {dados && (
         <div className="bg-white dark:bg-[#1E293B] p-6 rounded-2xl shadow-sm">
 
