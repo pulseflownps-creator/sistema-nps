@@ -79,26 +79,24 @@ export default function Tabela() {
 
   /* 🗑️ APAGAR TABELA (CORRIGIDO) */
   const confirmarExclusao = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
+    const { data: { user } } = await supabase.auth.getUser()
 
-      const { error } = await supabase
-        .from('atletas')
-        .delete()
-        .eq('user_id', user.id)
+    const { error } = await supabase
+      .from('atletas')
+      .delete()
+      .eq('user_id', user.id)
 
-      if (error) throw error
-
-      toast.success('Tabela apagada com sucesso')
-      setOpenModal(false)
-      carregar()
-    } catch (err) {
+    if (error) {
       toast.error('Erro ao apagar tabela')
-      console.error(err)
+      return
     }
+
+    toast.success('Tabela apagada com sucesso')
+    setOpenModal(false)
+    carregar()
   }
 
-  /* 📄 PDF MELHORADO */
+  /* 📄 PDF COM LOGO + AZUL */
   const gerarPDF = () => {
     const doc = new jsPDF()
 
@@ -109,25 +107,17 @@ export default function Tabela() {
     // LOGO
     const img = new Image()
     img.src = '/logo-empresa.png'
+    doc.addImage(img, 'PNG', 14, 10, 25, 15)
 
-    doc.addImage(img, 'PNG', 14, 10, 30, 15)
-
-    // TÍTULO
     doc.setFontSize(18)
     doc.setTextColor(33, 150, 243)
-    doc.text("Relatório NPS", 105, 20, { align: 'center' })
+    doc.text("Relatório NPS", 105, 15, { align: 'center' })
 
-    // DASHBOARD
     doc.setFontSize(12)
     doc.setTextColor(0, 0, 0)
-
-    doc.setFillColor(33, 150, 243)
-    doc.rect(14, 30, 180, 25, 'F')
-
-    doc.setTextColor(255, 255, 255)
-    doc.text(`Total: ${total}`, 20, 40)
-    doc.text(`Respondidos: ${respondidos}`, 80, 40)
-    doc.text(`Taxa: ${taxa}%`, 150, 40)
+    doc.text(`Total de atletas: ${total}`, 14, 30)
+    doc.text(`Respondidos: ${respondidos}`, 14, 38)
+    doc.text(`Taxa de resposta: ${taxa}%`, 14, 46)
 
     const tabela = filtrados.map((a, i) => ([
       i + 1,
@@ -138,7 +128,7 @@ export default function Tabela() {
     ]))
 
     autoTable(doc, {
-      startY: 60,
+      startY: 55,
       head: [['#', 'Nome', 'Período', 'Data', 'Respondido']],
       body: tabela,
       styles: { fontSize: 10 },
@@ -179,15 +169,21 @@ export default function Tabela() {
             </h2>
 
             <p className="text-sm text-gray-500 mb-4">
-              Tem certeza que deseja apagar todos os dados?
+              Tem certeza que deseja apagar todos os dados? Essa ação não pode ser desfeita.
             </p>
 
             <div className="flex justify-end gap-2">
-              <button onClick={() => setOpenModal(false)} className="px-4 py-2 rounded-lg bg-gray-300">
+              <button
+                onClick={() => setOpenModal(false)}
+                className="px-4 py-2 rounded-lg bg-gray-300"
+              >
                 Cancelar
               </button>
 
-              <button onClick={confirmarExclusao} className="px-4 py-2 rounded-lg bg-red-600 text-white">
+              <button
+                onClick={confirmarExclusao}
+                className="px-4 py-2 rounded-lg bg-red-600 text-white"
+              >
                 Apagar
               </button>
             </div>
@@ -196,23 +192,23 @@ export default function Tabela() {
         </div>
       )}
 
-      {/* HEADER */}
-      <div className="flex flex-col md:flex-row md:justify-between gap-4 items-center">
+      <div className="flex flex-col md:flex-row md:justify-between gap-4">
 
-        <h1 className="text-3xl font-bold text-blue-600">
-          Tabela NPS
-        </h1>
+        <h1 className="text-2xl font-semibold">Tabela NPS</h1>
 
         <div className="flex gap-2 flex-wrap">
-          <button onClick={gerarPDF} className="bg-blue-600 hover:bg-blue-700 transition text-white px-4 py-2 rounded-xl shadow">
+          <button onClick={gerarPDF} className="bg-blue-600 text-white px-4 py-2 rounded-lg">
             PDF
           </button>
 
-          <button onClick={exportarCSV} className="bg-blue-500 hover:bg-blue-600 transition text-white px-4 py-2 rounded-xl shadow">
+          <button onClick={exportarCSV} className="bg-green-600 text-white px-4 py-2 rounded-lg">
             CSV
           </button>
 
-          <button onClick={() => setOpenModal(true)} className="bg-red-600 hover:bg-red-700 transition text-white px-4 py-2 rounded-xl shadow">
+          <button 
+            onClick={() => setOpenModal(true)} 
+            className="bg-red-600 text-white px-4 py-2 rounded-lg"
+          >
             Apagar tabela
           </button>
         </div>
@@ -221,21 +217,36 @@ export default function Tabela() {
       {/* FILTROS */}
       <div className="flex gap-3 flex-wrap">
 
-        <select onChange={e => setMes(e.target.value)} className="p-2.5 rounded-xl border focus:ring-2 focus:ring-blue-500">
+        <select 
+          onChange={e => setMes(e.target.value)} 
+          className="p-2.5 border border-gray-300 dark:border-gray-600 
+          rounded-lg bg-white dark:bg-[#0B1F3A]
+          focus:ring-2 focus:ring-blue-500 outline-none"
+        >
           <option value="">Mês</option>
           {[...Array(12)].map((_, i) => (
             <option key={i} value={i}>{i + 1}</option>
           ))}
         </select>
 
-        <select onChange={e => setPeriodoFiltro(e.target.value)} className="p-2.5 rounded-xl border focus:ring-2 focus:ring-blue-500">
+        <select 
+          onChange={e => setPeriodoFiltro(e.target.value)} 
+          className="p-2.5 border border-gray-300 dark:border-gray-600 
+          rounded-lg bg-white dark:bg-[#0B1F3A]
+          focus:ring-2 focus:ring-blue-500 outline-none"
+        >
           <option value="">Período</option>
           {[...new Set(dados.map(a => a.periodo))].map(p => (
             <option key={p}>{p}</option>
           ))}
         </select>
 
-        <select onChange={e => setStatus(e.target.value)} className="p-2.5 rounded-xl border focus:ring-2 focus:ring-blue-500">
+        <select 
+          onChange={e => setStatus(e.target.value)} 
+          className="p-2.5 border border-gray-300 dark:border-gray-600 
+          rounded-lg bg-white dark:bg-[#0B1F3A]
+          focus:ring-2 focus:ring-blue-500 outline-none"
+        >
           <option value="">Status</option>
           <option value="sim">Respondido</option>
           <option value="nao">Não respondido</option>
@@ -243,8 +254,7 @@ export default function Tabela() {
 
       </div>
 
-      {/* TABELA */}
-      <div className="bg-white dark:bg-[#1E293B] rounded-2xl shadow-md overflow-x-auto">
+      <div className="bg-white dark:bg-[#1E293B] rounded-2xl shadow-sm overflow-x-auto">
 
         {loading ? (
           <div className="p-6 text-center">Carregando...</div>
@@ -263,7 +273,7 @@ export default function Tabela() {
 
             <tbody>
               {filtrados.map((a, i) => (
-                <tr key={a.id} className="border-t hover:bg-blue-50 dark:hover:bg-gray-700 transition">
+                <tr key={a.id} className="border-t hover:bg-blue-50 transition">
 
                   <td className="p-3">{i + 1}</td>
                   <td className="p-3">{a.nome}</td>
@@ -271,17 +281,9 @@ export default function Tabela() {
                   <td className="p-3">{new Date(a.created_at).toLocaleDateString()}</td>
 
                   <td className="p-3 flex gap-2">
-                    <button disabled={loadingId === a.id} onClick={() => atualizar(a.id, 'enviado_dia1')} className="bg-blue-500 text-white px-2 rounded">
-                      +1
-                    </button>
-
-                    <button disabled={loadingId === a.id} onClick={() => atualizar(a.id, 'enviado_semana')} className="bg-blue-400 text-white px-2 rounded">
-                      +7
-                    </button>
-
-                    <button disabled={loadingId === a.id} onClick={() => atualizar(a.id, 'respondido')} className="bg-blue-700 text-white px-2 rounded">
-                      OK
-                    </button>
+                    <button disabled={loadingId === a.id} onClick={() => atualizar(a.id, 'enviado_dia1')} className="bg-blue-600 text-white px-2 rounded">+1</button>
+                    <button disabled={loadingId === a.id} onClick={() => atualizar(a.id, 'enviado_semana')} className="bg-blue-500 text-white px-2 rounded">+7</button>
+                    <button disabled={loadingId === a.id} onClick={() => atualizar(a.id, 'respondido')} className="bg-blue-700 text-white px-2 rounded">OK</button>
                   </td>
 
                 </tr>
