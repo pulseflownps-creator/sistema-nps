@@ -65,7 +65,7 @@ export default function Login() {
   }
 
   return (
-    <div className="h-screen overflow-hidden flex items-center justify-center 
+    <div className="min-h-screen overflow-hidden flex items-center justify-center 
     bg-gradient-to-br from-[#0B1F3A] to-[#020617] px-4">
 
       <Toaster position="top-right" />

@@ -17,7 +17,6 @@ export default function ClientLayout({ children }) {
   useEffect(() => {
     if (typeof window === 'undefined') return
 
-    // 🔥 CORREÇÃO: verifica nos dois storages
     const local = localStorage.getItem('session')
     const sessionStore = sessionStorage.getItem('session')
 
@@ -47,32 +46,34 @@ export default function ClientLayout({ children }) {
     setLoading(false)
   }, [pathname, router, isLoginPage])
 
-  /* 🌙 TEMA */
+  /* 🌙 TEMA - CORRIGIDO */
   useEffect(() => {
     if (typeof window === 'undefined') return
 
     const saved = localStorage.getItem("theme")
 
-    if (saved === "dark") {
-      setDark(true)
-      document.documentElement.classList.add("dark")
+    // se tiver salvo
+    if (saved) {
+      const isDark = saved === "dark"
+      setDark(isDark)
+      document.documentElement.classList.toggle("dark", isDark)
+    } else {
+      // fallback: preferência do sistema
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
+      setDark(prefersDark)
+      document.documentElement.classList.toggle("dark", prefersDark)
     }
   }, [])
 
   const toggleTheme = () => {
-    if (dark) {
-      document.documentElement.classList.remove("dark")
-      localStorage.setItem("theme", "light")
-      setDark(false)
-    } else {
-      document.documentElement.classList.add("dark")
-      localStorage.setItem("theme", "dark")
-      setDark(true)
-    }
+    const newTheme = !dark
+
+    setDark(newTheme)
+    document.documentElement.classList.toggle("dark", newTheme)
+    localStorage.setItem("theme", newTheme ? "dark" : "light")
   }
 
   const logout = () => {
-    // 🔥 CORREÇÃO: limpa os dois
     localStorage.removeItem('session')
     sessionStorage.removeItem('session')
     router.push('/login')
@@ -108,7 +109,10 @@ export default function ClientLayout({ children }) {
           </div>
 
           <div className="flex items-center gap-3">
-            <button onClick={toggleTheme} className="p-2 bg-gray-200 dark:bg-gray-700 rounded-lg">
+            <button 
+              onClick={toggleTheme} 
+              className="p-2 bg-gray-200 dark:bg-gray-700 rounded-lg transition"
+            >
               {dark ? <Sun size={18} /> : <Moon size={18} />}
             </button>
 

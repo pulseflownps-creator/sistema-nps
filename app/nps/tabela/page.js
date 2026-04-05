@@ -41,9 +41,6 @@ export default function Tabela() {
     carregar()
   }, [])
 
-  /* =========================
-     FILTROS
-  ========================= */
   useEffect(() => {
     let temp = [...dados]
 
@@ -78,9 +75,24 @@ export default function Tabela() {
     setLoadingId(null)
   }
 
-  /* =========================
-     PDF
-  ========================= */
+  /* 🗑️ APAGAR TABELA */
+  const apagarTabela = async () => {
+    const confirmar = confirm('Tem certeza que deseja apagar TODOS os dados?')
+
+    if (!confirmar) return
+
+    const { data: { user } } = await supabase.auth.getUser()
+
+    await supabase
+      .from('atletas')
+      .delete()
+      .eq('user_id', user.id)
+
+    toast.success('Tabela apagada com sucesso')
+    carregar()
+  }
+
+  /* 📄 PDF PROFISSIONAL */
   const gerarPDF = () => {
     const doc = new jsPDF()
     const img = new Image()
@@ -88,7 +100,9 @@ export default function Tabela() {
 
     img.onload = () => {
       doc.addImage(img, 'PNG', 14, 10, 20, 20)
-      doc.text("Relatório NPS", 40, 18)
+
+      doc.setFontSize(16)
+      doc.text("Relatório NPS", 105, 20, { align: 'center' })
 
       const tabela = filtrados.map((a, i) => ([
         i + 1,
@@ -99,18 +113,22 @@ export default function Tabela() {
       ]))
 
       autoTable(doc, {
-        startY: 40,
+        startY: 35,
         head: [['#', 'Nome', 'Período', 'Data', 'Respondido']],
         body: tabela,
+        styles: {
+          fontSize: 10,
+          cellPadding: 3
+        },
+        headStyles: {
+          fillColor: [30, 41, 59]
+        }
       })
 
       doc.save('relatorio_nps.pdf')
     }
   }
 
-  /* =========================
-     CSV
-  ========================= */
   const exportarCSV = () => {
     const linhas = filtrados.map(a =>
       `${a.nome},${a.periodo},${a.respondido ? 'Sim' : 'Não'}`
@@ -144,27 +162,46 @@ export default function Tabela() {
           <button onClick={exportarCSV} className="bg-green-600 text-white px-4 py-2 rounded-lg">
             CSV
           </button>
+
+          <button onClick={apagarTabela} className="bg-red-600 text-white px-4 py-2 rounded-lg">
+            Apagar tabela
+          </button>
         </div>
       </div>
 
-      {/* FILTROS */}
+      {/* FILTROS MELHORADOS */}
       <div className="flex gap-3 flex-wrap">
 
-        <select onChange={e => setMes(e.target.value)} className="p-2 border rounded">
+        <select 
+          onChange={e => setMes(e.target.value)} 
+          className="p-2.5 border border-gray-300 dark:border-gray-600 
+          rounded-lg bg-white dark:bg-[#0B1F3A]
+          focus:ring-2 focus:ring-blue-500 outline-none"
+        >
           <option value="">Mês</option>
           {[...Array(12)].map((_, i) => (
             <option key={i} value={i}>{i + 1}</option>
           ))}
         </select>
 
-        <select onChange={e => setPeriodoFiltro(e.target.value)} className="p-2 border rounded">
+        <select 
+          onChange={e => setPeriodoFiltro(e.target.value)} 
+          className="p-2.5 border border-gray-300 dark:border-gray-600 
+          rounded-lg bg-white dark:bg-[#0B1F3A]
+          focus:ring-2 focus:ring-blue-500 outline-none"
+        >
           <option value="">Período</option>
           {[...new Set(dados.map(a => a.periodo))].map(p => (
             <option key={p}>{p}</option>
           ))}
         </select>
 
-        <select onChange={e => setStatus(e.target.value)} className="p-2 border rounded">
+        <select 
+          onChange={e => setStatus(e.target.value)} 
+          className="p-2.5 border border-gray-300 dark:border-gray-600 
+          rounded-lg bg-white dark:bg-[#0B1F3A]
+          focus:ring-2 focus:ring-blue-500 outline-none"
+        >
           <option value="">Status</option>
           <option value="sim">Respondido</option>
           <option value="nao">Não respondido</option>
@@ -172,7 +209,6 @@ export default function Tabela() {
 
       </div>
 
-      {/* TABELA */}
       <div className="bg-white dark:bg-[#1E293B] rounded-2xl shadow-sm overflow-x-auto">
 
         {loading ? (
